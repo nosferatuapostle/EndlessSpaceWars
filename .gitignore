@@ -1,0 +1,7 @@
+.config/
+bin/
+obj/
+
+*.manifest
+*.csproj
+*.csproj.user
