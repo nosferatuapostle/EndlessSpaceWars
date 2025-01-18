@@ -13,7 +13,7 @@ namespace EndlessSpace
 
         public static int UnitsCount = 0;
 
-        const float MAX_DISTANCE = 10000f;
+        const float MAX_DISTANCE = 4000f;
 
         World world;
         CollisionComponent collision_component;
@@ -73,9 +73,9 @@ namespace EndlessSpace
             for (int i = unit_list.Count - 1; i >= 0; i--)
             {
                 unit_list[i].Update(game_time);
-
-                float distance_to_player = Vector2.Distance(unit_list[i].Position, unit_list[i] is PlayerCharacter ? ((PlayerCharacter)unit_list[i]).Position : unit_list[i].Position);
-                if (distance_to_player > MAX_DISTANCE || unit_list[i].IsDestroyed)
+                float distance_to_player = Vector2.Distance(unit_list[i].Position, world.PlayerCharacter.Position);
+                float distance_to_camera = Vector2.Distance(unit_list[i].Position, World.Camera.Center.ToPoint().ToVector2());
+                if ((distance_to_camera > MAX_DISTANCE && distance_to_player > MAX_DISTANCE) || unit_list[i].IsDestroyed)
                 {
                     Explosion explosion = new Explosion(unit_list[i].Position, unit_list[i].Explosion(), 1f);
                     explosions.Add(explosion);
@@ -117,7 +117,7 @@ namespace EndlessSpace
             {
                 if (!unit.EffectTarget.IsThrob || unit.IsDead)
                 {
-                    unit.Engine?.Draw(sprite_batch);
+                    if (unit.Movable) unit.Engine?.Draw(sprite_batch);
                     unit.UnitInfo?.Draw(sprite_batch);
                     unit.Draw(sprite_batch);
 
@@ -138,7 +138,7 @@ namespace EndlessSpace
                     {
                         color = Color.Red;
                     }
-                    else if (unit is Character character && character.IsPlayerTeamate)
+                    else if (unit is Character character && character.IsPlayerTeammate)
                     {
                         color = Color.Green;
                     }
@@ -148,7 +148,7 @@ namespace EndlessSpace
                     }
 
                     float outline_thickness = 1.8f / unit.Width / unit.FrameCount;
-                    Shader.Outline.Parameters["OutlineColor"].SetValue(color.ToVector4());
+                    Shader.Outline.Parameters["OutlineColor"].SetValue(color.ToVector4() * 0.5f);
                     Shader.Outline.Parameters["OutlineThickness"].SetValue(outline_thickness);
                     Shader.Outline.CurrentTechnique.Passes[0].Apply();
 
@@ -185,11 +185,14 @@ namespace EndlessSpace
             foreach (Projectile proj in projectile_list)
             {
                 proj.Draw(sprite_batch);
+                //sprite_batch.DrawCircle((CircleF)proj.Bounds, 64, Color.Red * 0.75f);
             }
         }
 
         public void DrawEffects(SpriteBatch sprite_batch)
         {
+            //sprite_batch.DrawCircle(new CircleF(World.Camera.Center.ToPoint().ToVector2(), NPC.RADIUS/2f), 64, Color.White);
+
             foreach (Unit unit in unit_list)
             {
                 unit.EffectTarget.Draw(sprite_batch);
@@ -198,14 +201,6 @@ namespace EndlessSpace
             foreach (Explosion explosion in explosions)
             {
                 explosion.Draw(sprite_batch);
-            }
-        }
-
-        public void DrawCircle(SpriteBatch sprite_batch)
-        {
-            foreach (Projectile proj in projectile_list)
-            {
-                sprite_batch.DrawCircle((CircleF)proj.Bounds, 64, Color.Red * 0.75f);
             }
         }
     }

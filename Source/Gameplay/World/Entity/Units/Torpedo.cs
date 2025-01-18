@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace EndlessSpace
 {
@@ -14,6 +15,19 @@ namespace EndlessSpace
             }, position, new Vector2(64, 64), faction, null)
         {
             Name = "Torpedo";
+
+            base_values = new Dictionary<UnitValue, UnitValueInfo>
+            {
+                { UnitValue.Health, new UnitValueInfo(UnitValue.Health, 4f) },
+                { UnitValue.Heal, new UnitValueInfo(UnitValue.Heal, 0.02f) },
+                { UnitValue.HealRate, new UnitValueInfo(UnitValue.HealRate, 1f, 2f) },
+                { UnitValue.CriticalChance, new UnitValueInfo(UnitValue.CriticalChance, 0f, 1f) },
+                { UnitValue.Magnitude, new UnitValueInfo(UnitValue.Magnitude, 0.8f) },
+                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 0.3f) },
+                { UnitValue.SpeedMult, new UnitValueInfo(UnitValue.SpeedMult, 1.05f, 2f) }
+            };
+
+            values_increase = new float[] { 0.7f, 0.01f, 0.01f, 0.0075f, 0.2f, 0.036f, 0.007f };
 
             switch (faction)
             {

@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.ImGui;
-using System.Collections.Generic;
 
 namespace EndlessSpace
 {
@@ -13,6 +12,8 @@ namespace EndlessSpace
 
         ImGuiRenderer gui_renderer;
 
+        Background background;
+
         World world;
 
         BasicObject cursor;
@@ -22,8 +23,10 @@ namespace EndlessSpace
         {
             this.graphics_device = graphics_device;
             this.window = window;
-            
+
             gui_renderer = new ImGuiRenderer(game).Initialize().RebuildFontAtlas();
+
+            background = new Background(graphics_device);
 
             world = new World(graphics_device, window);
 
@@ -44,8 +47,8 @@ namespace EndlessSpace
                 is_reset = false;
             }
 
-            if (Input.WasKeyPressed(Microsoft.Xna.Framework.Input.Keys.D5))
-                EntityManager.AddUnit(new NPC(new Scout(new Vector2(-200, -200), UnitFaction.Biomantes), EntityManager.UnitList));
+            /*if (Input.WasKeyPressed(Microsoft.Xna.Framework.Input.Keys.D5))
+                EntityManager.AddUnit(new NPC(new Scout(new Vector2(-200, -200), UnitFaction.Biomantes), EntityManager.UnitList));*/
 
             world.Update(game_time);
 
@@ -54,6 +57,7 @@ namespace EndlessSpace
 
         public void Draw(SpriteBatch sprite_batch, GameTime game_time)
         {
+            background.Draw(sprite_batch);
             world.Draw(sprite_batch);
 
             gui_renderer.BeginLayout(game_time);
@@ -85,6 +89,7 @@ namespace EndlessSpace
             {
                 is_reset = true;
             }
+            ImGui.Text($"Camera: X - {World.Camera.BoundingRectangle.X}, Y - {World.Camera.BoundingRectangle.Y}");
             ImGui.Text("");
 
             {
@@ -122,19 +127,20 @@ namespace EndlessSpace
                 ImGui.Text($"Name: {unit.Name}, ID: {character.ID}, Level: {character.Level}");
                 ImGui.Text("");
                 ImGui.Text($"Faction: {unit.Faction}");
-                ImGui.Text($"IsPlayerTeamate: {character.IsPlayerTeamate}");
+                ImGui.Text($"IsPlayerTeammate: {character.IsPlayerTeammate}");
                 ImGui.Text($"IsDead: {character.IsDead}");
+                ImGui.Text($"X: {character.Position.X}, Y: {character.Position.Y}");
 
                 ImGui.Text("");
-                ImGui.Text($"Heal: {character.GetBaseUnitValue(UnitValue.Heal)}");
-                ImGui.Text($"Health: {character.GetBaseUnitValue(UnitValue.Health)}");
-                ImGui.Text($"HealRate: {character.GetBaseUnitValue(UnitValue.HealRate)}");
-                ImGui.Text($"DamageResist: {character.GetBaseUnitValue(UnitValue.DamageResist)}");
-                ImGui.Text($"CriticalChance: {character.GetBaseUnitValue(UnitValue.CriticalChance)}");
-                ImGui.Text($"Magnitude: {character.GetBaseUnitValue(UnitValue.Magnitude)}");
-                ImGui.Text($"SpeedMult: {character.GetBaseUnitValue(UnitValue.SpeedMult)}");
+                ImGui.Text($"Health: {character.GetUnitValue(UnitValue.Health)}");
+                ImGui.Text($"Heal: {character.GetUnitValue(UnitValue.Heal)}");
+                ImGui.Text($"HealRate: {character.GetUnitValue(UnitValue.HealRate)}");
+                ImGui.Text($"CriticalChance: {character.GetUnitValue(UnitValue.CriticalChance)}");
+                ImGui.Text($"Magnitude: {character.GetUnitValue(UnitValue.Magnitude)}");
+                ImGui.Text($"DamageResist: {character.GetUnitValue(UnitValue.DamageResist)}");
+                ImGui.Text($"SpeedMult: {character.GetUnitValue(UnitValue.SpeedMult)}");
                 ImGui.Text("");
-                
+
                 if (unit.EffectTarget.ActiveEffects.Count > 0)
                 {
                     ImGui.Text("Active Effects:");
@@ -144,13 +150,13 @@ namespace EndlessSpace
                     }
                     ImGui.Text("");
                 }
-                
+
                 if (unit is NPC npc)
                 {
                     var target = npc.current_target as Character;
                     if (target != null)
                     {
-                        ImGui.Text($"current target: {target.Name}, {target.ID}");
+                        ImGui.Text($"current target: {target.Name}, ID: {target.ID}");
                         ImGui.Text("");
                     }
                     if (npc.detected_units.Count > 0)
@@ -158,10 +164,11 @@ namespace EndlessSpace
                         ImGui.Text("detected units:");
                         foreach (var detected_unit in npc.detected_units)
                         {
-                            ImGui.Text($"{detected_unit.Name}");
+                            var detected_char = detected_unit as Character;
+                            ImGui.Text($"{detected_char.Name}, ID: {detected_char.ID}");
                         }
                         ImGui.Text("");
-                    }                    
+                    }
                 }
 
                 ImGui.Text("");
@@ -179,7 +186,7 @@ namespace EndlessSpace
             ImGui.SameLine();
             if (ImGui.Button("-"))
             {
-                player.Experience.RemoveExp(1);
+                player.Experience.AddExp(-1);
             }
             ImGui.SameLine();
             if (ImGui.Button("NextLevel"))
@@ -189,7 +196,7 @@ namespace EndlessSpace
             ImGui.SameLine();
             if (ImGui.Button("PrevLevel"))
             {
-                player.Experience.RemoveExp(player.Experience.NextXP);
+                --player.Level;
             }
 
             if (ImGui.Button("UnKillable"))

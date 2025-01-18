@@ -34,11 +34,11 @@ namespace EndlessSpace
             Defence
         }
 
+        const float DIRECTION_MULT = 32f;
         const float MIN_DISTANCE = 20f;
         const float MAX_DISTANCE = 1624f;
-        const float COMMANDED_UNIT_DISTANCE = 164f;
+        const float COMMANDED_UNIT_DISTANCE = 256f;
 
-        bool commanded_unit_is_ready;
         float speed_mult;
 
         NPC npc;
@@ -51,7 +51,7 @@ namespace EndlessSpace
         public HashSet<Unit> target_list;
         
         public Unit current_target => target_list
-        .Where(unit => unit != owner && unit != npc && !unit.IsDead)
+        .Where(unit => unit != owner && unit != npc && !unit.IsDead && unit.Faction != UnitFaction.Summoned)
         .OrderBy(unit => unit == owner?.Target)
         .OrderBy(unit => Vector2.Distance(unit.Position, npc.Position))
         .FirstOrDefault();
@@ -62,13 +62,11 @@ namespace EndlessSpace
             this.owner = owner;
             target_list = new HashSet<Unit>();
 
-            commanded_unit_is_ready = false;
-
             behavior = Behavior.Default;
 
             do
             {
-                direction = new Vector2(Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2)) * 12f;
+                direction = new Vector2(Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2)) * DIRECTION_MULT;
             }
             while (direction == Vector2.Zero);
 
@@ -82,8 +80,11 @@ namespace EndlessSpace
 
         private void OnAttacked(Unit attacked, Unit aggressor, ref float damage)
         {
-            if (aggressor == null || aggressor.IsDead) return;
-            
+            if (owner != null && !owner.IsDead && owner is NPC owner_npc)
+            {
+                owner_npc.target_list.Add(aggressor);
+            }
+
             if (aggressor.Faction == UnitFaction.Summoned && aggressor is NPC npc && npc.owner != null)
             {
                 target_list.Add(npc.owner);
@@ -101,12 +102,15 @@ namespace EndlessSpace
         private void RefreshTarget()
         {
             target_list.RemoveWhere(unit => unit.IsDead || Vector2.Distance(unit.Position, npc.Position) > MAX_DISTANCE);
+            
+            if (owner?.Target != null && owner.HostileTo(owner?.Target)) target_list.Add(owner.Target);
+
             foreach (var unit in npc.detected_units)
             {
                 bool is_summon_faction = unit.Faction == UnitFaction.Summoned;
-                if (owner != null)
+                if (owner != null && unit.HostileTo(owner) && !is_summon_faction)
                 {
-                    if (unit.HostileTo(npc) && unit.HostileTo(owner) && !is_summon_faction) target_list.Add(unit);
+                    target_list.Add(unit);
                 } 
                 else if (unit.HostileTo(npc) && !is_summon_faction) target_list.Add(unit);
             }
@@ -195,20 +199,19 @@ namespace EndlessSpace
         private void CommandedLogic()
         {
             var target = current_target; //(owner.Target == npc ? null : owner.Target) ??
-            if (commanded_unit_is_ready && target != null && !target.IsDead && Vector2.Distance(npc.Position, owner.Position) < COMMANDED_UNIT_DISTANCE + npc.detection_radius.Radius)
+            if (target != null && !target.IsDead && Vector2.Distance(npc.Position, owner.Position) < COMMANDED_UNIT_DISTANCE + npc.detection_radius.Radius)
             {
                 target_list.Add(target);
                 state = State.Attacking;
             }
             else
             {
-                commanded_unit_is_ready = false;
                 target_list.Clear();
                 state = State.Following;
             }
         }
 
-        private void ExecuteState(float dtime)
+        private void ExecuteState(float delta_time)
         {
             switch (state)
             {
@@ -218,25 +221,25 @@ namespace EndlessSpace
                     Initial();
                     break;
                 case State.Moving:
-                    Moving(dtime);
+                    Moving(delta_time);
                     break;
                 case State.Following:
-                    Follow(dtime);
+                    Follow(delta_time);
                     break;
                 case State.Attacking:
-                    npc.Attack(current_target, dtime);
+                    npc.Attack(current_target, delta_time);
                     break;
                 case State.Escape:
-                    Escape(dtime);
+                    Escape(delta_time);
                     break;
             }
         }
 
-        public void Update(float dtime)
+        public void Update(float delta_time)
         {
             RefreshTarget();
             UpdateState();
-            ExecuteState(dtime);
+            ExecuteState(delta_time);
         }
 
         private void Initial()
@@ -245,7 +248,7 @@ namespace EndlessSpace
             behavior = Behavior.Default;
         }
 
-        private void Moving(float dtime)
+        private void Moving(float delta_time)
         {
             Vector2 adjusted_direction = direction;
 
@@ -253,7 +256,7 @@ namespace EndlessSpace
             {
                 if (other_unit == npc || other_unit.IsDead) continue;
 
-                Vector2 to_other_unit = (other_unit.Position + other_unit.Velocity * dtime) - npc.Position;
+                Vector2 to_other_unit = (other_unit.Position + Vector2.Zero * delta_time) - npc.Position;
                 float distance = to_other_unit.Length();
 
                 const float NOUN = 0.75f;
@@ -280,8 +283,7 @@ namespace EndlessSpace
             npc.MoveTo(target_position);
         }
 
-
-        private void Follow(float dtime)
+        private void Follow(float delta_time)
         {
             float offset = owner.Width * 2f;
             if (behavior == Behavior.Commanded)
@@ -297,6 +299,7 @@ namespace EndlessSpace
         public void SyncFollow(float offset)
         {
             offset /= 2f;
+            if (owner == null || owner.IsDead) return;
             List<Unit> group_list = new List<Unit>(owner is NPC owner_npc ? owner_npc.group : null);
 
             int total_units = group_list.Count;
@@ -318,7 +321,6 @@ namespace EndlessSpace
 
             if (Vector2.Distance(npc.Position, position) < MIN_DISTANCE)
             {
-                commanded_unit_is_ready = true;
                 npc.MoveStop();
             }
             else
@@ -327,26 +329,24 @@ namespace EndlessSpace
             }
         }
 
-
-
         private void CommandedFollow(float offset)
         {
-            if (Vector2.Distance(npc.Position, owner.Position) > offset)
+            float distance = Vector2.Distance(npc.Position, owner.Position);
+            if (distance > offset)
             {
                 npc.MoveTo(owner.Position);
                 return;
             }
             else
             {
-                commanded_unit_is_ready = true;
                 npc.MoveStop();
             }
         }
 
-        private void Escape(float dtime)
+        private void Escape(float delta_time)
         {
             Vector2 escape_position = npc.Position - current_target.Position;
-            npc.MoveTo(npc.Position + escape_position * 12f);
+            npc.MoveTo(npc.Position + escape_position * DIRECTION_MULT);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace EndlessSpace
             background = new BasicObject("Textures\\UI\\ProgressBarBKG", Vector2.Zero, size);
         }
 
-        public virtual void Update(float instance, float current, float dtime)
+        public virtual void Update(float instance, float current, float delta_time)
         {
             background.Size = size;
             foreground.Size = new Vector2(current/ instance * size.X, size.Y);

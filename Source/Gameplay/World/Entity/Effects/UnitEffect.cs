@@ -43,7 +43,7 @@ namespace EndlessSpace
 
             if (source is PlayerCharacter player) this.player = player;
             if (this.player == null) return;
-            this.player.on_level_changed += OnLevelChanged;
+            this.player.on_level_up += OnLevelChanged;
         }
 
         public static ulong ResetID() => next_id = 0;
@@ -90,7 +90,7 @@ namespace EndlessSpace
         public virtual void OnEffectEnd()
         {
             if (player == null) return;
-            player.on_level_changed -= OnLevelChanged;
+            player.on_level_up -= OnLevelChanged;
         }
 
         public virtual void Draw(SpriteBatch sprite_batch)

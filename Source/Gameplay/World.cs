@@ -1,39 +1,31 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
 using MonoGame.Extended.Collisions.Layers;
 using MonoGame.Extended.ViewportAdapters;
-using System.Diagnostics;
-using System;
 
 namespace EndlessSpace
 {
     public class World
     {
-        public Texture2D texture;
-
-        static OrthographicCamera camera;
-
         WindowViewportAdapter viewport_adapter;
-
-        CollisionComponent collision_component;
-
+        static OrthographicCamera camera;
+        CameraController camera_controller;
         PlayerCharacter player;
 
+        CollisionComponent collision_component;
+        
         EntityManager entity_manager;
-
         EffectManager effect_manager;
-
+        
         EncounterZone encounter_zone;
 
         public World(GraphicsDevice graphics_device, GameWindow window)
         {
-            texture = Globals.Content.Load<Texture2D>("Textures\\Unit\\Bomber_00_00");
-
             viewport_adapter = new WindowViewportAdapter(window, graphics_device);
             camera = new OrthographicCamera(viewport_adapter);
+            camera_controller = new CameraController();
 
             collision_component = new CollisionComponent(new Layer(new SpatialHash(new Vector2(120, 120))));
 
@@ -45,7 +37,10 @@ namespace EndlessSpace
             EffectManager.PassEffect = effect_manager.AddEffect;
             EffectManager.PassLightning = effect_manager.AddLightning;
 
-            player = new PlayerCharacter(new Scout(new Vector2(graphics_device.Viewport.Width / 2, graphics_device.Viewport.Height / 2), UnitFaction.Biomantes), entity_manager.UnitList);
+            Vector2 position = new Vector2(graphics_device.Viewport.Width / 2, graphics_device.Viewport.Height / 2);
+            player = new PlayerCharacter(new Dreadnought(position, UnitFaction.DuskFleet), entity_manager.UnitList);
+
+            //player = new PlayerCharacter(new Scout(position, UnitFaction.Biomantes), entity_manager.UnitList);
             entity_manager.AddUnit(player);
 
             encounter_zone = new EncounterZone(player, entity_manager.UnitList);
@@ -65,6 +60,8 @@ namespace EndlessSpace
                 player.GetDamage(player, 1f);
             }*/
 
+            camera_controller.Update(game_time);
+
             entity_manager.Update(game_time);
             collision_component.Update(game_time);
 
@@ -77,6 +74,9 @@ namespace EndlessSpace
 
         public void Draw(SpriteBatch sprite_batch)
         {
+            Vector2 parallax_offset = new Vector2(0.1f, 0.1f);
+            Matrix parallax = camera.GetViewMatrix(parallax_offset);
+
             Matrix transform = camera.GetViewMatrix();
 
             /*sprite_batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, transformMatrix: transform);

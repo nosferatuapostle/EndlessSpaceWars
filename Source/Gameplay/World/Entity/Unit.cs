@@ -17,30 +17,36 @@ namespace EndlessSpace
 
         public bool is_selected;
 
+        int level;
+
         protected AnimatedEngine engine;
         protected Weapon weapon;
 
         UnitEvent unit_event;
         UnitInfo info;
-        Dictionary<UnitValue, UnitValueInfo> values;
+        protected float[] values_increase;
+        protected Dictionary<UnitValue, UnitValueInfo> base_values;
 
         Movable movement;
         protected EffectTarget effect_target;
 
         public Unit(string[] path, Vector2 position, Vector2 size, UnitFaction faction, List<Unit> unit_list) : base(path, position, size)
         {
+            level = 1;
             unit_event = new UnitEvent();
 
-            values = new Dictionary<UnitValue, UnitValueInfo>
+            base_values = new Dictionary<UnitValue, UnitValueInfo>
             {
                 { UnitValue.Health, new UnitValueInfo(UnitValue.Health, 10f) },
-                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 1f) },
-                { UnitValue.Magnitude, new UnitValueInfo(UnitValue.Magnitude, 1f) },
                 { UnitValue.Heal, new UnitValueInfo(UnitValue.Heal, 0.0f) },
                 { UnitValue.HealRate, new UnitValueInfo(UnitValue.HealRate, 1f, 2f) },
                 { UnitValue.CriticalChance, new UnitValueInfo(UnitValue.CriticalChance, 0f, 1f) },
-                { UnitValue.SpeedMult, new UnitValueInfo(UnitValue.SpeedMult, 100f, 250f) }
+                { UnitValue.Magnitude, new UnitValueInfo(UnitValue.Magnitude, 1f) },
+                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 1f) },
+                { UnitValue.SpeedMult, new UnitValueInfo(UnitValue.SpeedMult, 100f, 200f) }
             };
+
+            values_increase = new float[base_values.Count];
 
             Faction = faction;
 
@@ -57,18 +63,26 @@ namespace EndlessSpace
         public UnitEvent Event => unit_event;
 
         public UnitInfo UnitInfo => info;
-        public Dictionary<UnitValue, UnitValueInfo> Values => values;
+        public float[] IncreaseValues => values_increase;
+        public Dictionary<UnitValue, UnitValueInfo> Values => base_values;
 
         public AnimatedEngine Engine => engine;
         public EffectTarget EffectTarget => effect_target;
 
-        public int Level { get; set; } = 1;
+        public int Level
+        {
+            get => level;
+            set
+            {
+                level = value;
+            }
+        }
 
         public string Name { get; protected set; } = "None";
         public UnitFaction Faction { get; protected set; } = UnitFaction.None;
 
         public Unit Target => weapon.Target;
-        public void Attack(Unit target, float dtime)
+        public void Attack(Unit target, float delta_time)
         {
             if (target == null || target.IsDead) return;
             if (weapon.Range < Vector2.Distance(Position, target.Position))
@@ -78,7 +92,8 @@ namespace EndlessSpace
             else
             {
                 MoveStop();
-                weapon.PassProjectile(target, dtime);
+                weapon.PassProjectile(target, delta_time);
+                Rotate(target.Position, delta_time);
             }
         }
 
@@ -92,12 +107,47 @@ namespace EndlessSpace
         public bool IsDead { get; protected set; } = false;
         public bool IsDestroyed { get; protected set; } = false;
 
+        public void MoveTo(Vector2 position) => movement.SetTarget(position);
+        public void MoveStop() => movement.Stop();
+        public bool Movable => movement.IsMovable;
+
+        public void Rotate(Vector2 position, float delta_time)
+        {
+            const float SPEED = 10f;
+            float target_rotation = MathF.Atan2(position.Y - Position.Y, position.X - Position.X) + MathHelper.PiOver2;
+            float rotation_difference = MathHelper.WrapAngle(target_rotation - Rotation);
+            float max_rotation = SPEED * delta_time;
+            if (MathF.Abs(rotation_difference) < max_rotation)
+            {
+                Rotation = target_rotation;
+                return;
+            }
+
+            Rotation += MathHelper.Clamp(rotation_difference, -max_rotation, max_rotation);
+        }
+
+        public override void Update(GameTime game_time)
+        {
+            base.Update(game_time);
+            
+            effect_target.Update(game_time);
+            weapon.Update(game_time);
+            movement.Update(game_time);
+            info?.Update(game_time);
+            engine?.Update(game_time);
+
+            if (GetBaseUnitValue(UnitValue.Health) > GetUnitValue(UnitValue.Health) && !IsDead)
+            {
+                RestoreUnitValue(UnitValue.Health, GetUnitValue(UnitValue.Heal) * GetUnitValue(UnitValue.HealRate) * game_time.GetElapsedSeconds());
+            }
+        }
+
         public void OnCollision(CollisionEventArgs collision_info)
         {
             if (collision_info.Other is Unit unit)
             {
                 float distance = Vector2.Distance(Position, unit.Position);
-                float radius = unit.Bounds.BoundingRectangle.Width/4f;
+                float radius = unit.Bounds.BoundingRectangle.Width / 4f;
 
                 if (distance < radius)
                 {
@@ -119,40 +169,6 @@ namespace EndlessSpace
             }
         }
 
-
-        public override void Update(GameTime game_time)
-        {
-            base.Update(game_time);
-            
-            effect_target.Update(game_time);
-            weapon.Update(game_time);
-            movement.Update(game_time);
-            info?.Update(game_time);
-            engine?.Update(game_time);
-
-            if (GetBaseUnitValue(UnitValue.Health) > GetUnitValue(UnitValue.Health) && !IsDead)
-            {
-                RestoreUnitValue(UnitValue.Health, GetUnitValue(UnitValue.Heal) * GetUnitValue(UnitValue.HealRate) * game_time.GetElapsedSeconds());
-            }
-        }
-
-        public void MoveTo(Vector2 position) => movement.SetTarget(position);
-
-        public void MoveStop() => movement.Stop();
-
-        public virtual float Rotate(float rot, float rot_target, float dtime)
-        {
-            rot = MathHelper.WrapAngle(rot);
-            rot_target = MathHelper.WrapAngle(rot_target);
-
-            float angle = MathHelper.WrapAngle(rot_target - rot);
-
-            float rot_speed = 10f * dtime;
-            angle = MathHelper.Clamp(angle, -rot_speed, rot_speed);
-
-            return rot + angle;
-        }
-
         public virtual void GetDamage(Unit source, float damage)
         {
             GetDamage(source, damage, Color.White);
@@ -162,8 +178,7 @@ namespace EndlessSpace
         {
             effect_target.ActivateThrob(throb_color);
 
-            if (source == null) return;
-
+            if (source == null || Faction == UnitFaction.Summoned) return;
             Event.OnAttacked(this, source, ref damage);
 
             if (damage <= 0f) return;
@@ -174,7 +189,7 @@ namespace EndlessSpace
             if (Random.Shared.NextDouble() < source.GetUnitValue(UnitValue.CriticalChance))
                 damage *= CRITICAL_MULTIPLIER;
 
-            float final_damage = damage.CalcDamage(resistance, magnitude);
+            float final_damage = damage.Calc(resistance, magnitude);
 
             if (final_damage > 0.5f)
                 info.AddFloatingDamage(final_damage, Color.Red);
@@ -242,29 +257,29 @@ namespace EndlessSpace
 
         public float GetUnitValue(UnitValue value)
         {
-            return values.TryGetValue(value, out var info) ? info.CurrentValue : 0;
+            return base_values.TryGetValue(value, out var info) ? info.CurrentValue : 0;
         }
 
         public float GetBaseUnitValue(UnitValue value)
         {
-            return values.TryGetValue(value, out var info) ? info.BaseValue : 0;
+            return base_values.TryGetValue(value, out var info) ? info.BaseValue : 0;
         }
 
         public void SetBaseUnitValue(UnitValue value, float base_value)
         {
-            if (values.ContainsKey(value))
+            if (base_values.ContainsKey(value))
             {
-                values[value] = new UnitValueInfo(value, base_value);
+                base_values[value] = new UnitValueInfo(value, base_value);
             }
             else
             {
-                values.Add(value, new UnitValueInfo(value, base_value));
+                base_values.Add(value, new UnitValueInfo(value, base_value));
             }
         }
 
         public void SetUnitValue(UnitValue value, float amount)
         {
-            if (values.TryGetValue(value, out var info))
+            if (base_values.TryGetValue(value, out var info))
             {
                 info.SetValue(amount);
             }
@@ -272,7 +287,7 @@ namespace EndlessSpace
 
         public void ModifyUnitValue(UnitValue value, float amount)
         {
-            if (values.TryGetValue(value, out var info))
+            if (base_values.TryGetValue(value, out var info))
             {
                 info.ModifyValue(amount);
             }
@@ -280,7 +295,7 @@ namespace EndlessSpace
 
         public void RestoreUnitValue(UnitValue value, float amount)
         {
-            if (values.TryGetValue(value, out var info))
+            if (base_values.TryGetValue(value, out var info))
             {
                 info.ModifyValue(amount);
             }

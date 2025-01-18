@@ -6,7 +6,7 @@ namespace EndlessSpace
 {
     public class NPC : Character
     {
-        public static float RADIUS = 480f;
+        public const float RADIUS = 480f;
 
         AI AI;
         List<Unit> unit_list;
@@ -14,19 +14,21 @@ namespace EndlessSpace
         public readonly HashSet<Unit> group;
         public readonly HashSet<Unit> detected_units;
 
-        public NPC(Unit unit, List<Unit> unit_list, Unit owner = null) : base(unit, unit_list)
+        public NPC(Unit unit, List<Unit> unit_list, int level, Unit owner = null) : base(unit, unit_list)
         {
             AI = new AI(this, owner);
-
+            Level = level;
+            UpdateStats(level);
             this.unit_list = unit_list;
             group = new HashSet<Unit>();
             detected_units = new HashSet<Unit>();
 
-            if (owner != null && owner is PlayerCharacter) IsPlayerTeamate = true;
+            if (owner != null && owner is PlayerCharacter) IsPlayerTeammate = true;
         }
 
         public Unit owner => AI.owner;
         public Unit current_target => AI.current_target;
+        public HashSet<Unit> target_list => AI.target_list;
 
         public CircleF detection_radius
         {
@@ -76,7 +78,7 @@ namespace EndlessSpace
 
         protected override void OnDeath(Unit dying, Unit killer)
         {
-            if (killer is NPC npc && npc.IsPlayerTeamate && npc.AI.owner != null && npc.AI.owner is PlayerCharacter player)
+            if (killer is NPC npc && npc.IsPlayerTeammate && npc.AI.owner != null && npc.AI.owner is PlayerCharacter player)
             {
                 player.Experience.AddExp(1f);
             }

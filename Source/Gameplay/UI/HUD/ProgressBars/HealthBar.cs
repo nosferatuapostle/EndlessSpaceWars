@@ -44,7 +44,7 @@ namespace EndlessSpace
             }
         }
 
-        public virtual void Update(float dtime)
+        public virtual void Update(float delta_time)
         {
             Vector2 target_position = new Vector2((int)(unit.Position.X - size.X / 2f), (int)(unit.Position.Y + unit.Height / 2f));
 
@@ -52,10 +52,10 @@ namespace EndlessSpace
 
             float target_value = unit.GetUnitValue(UnitValue.Health);
 
-            delayed_value = MathHelper.Lerp(delayed_value, target_value, ANIMATION_SPEED * dtime);
+            delayed_value = MathHelper.Lerp(delayed_value, target_value, ANIMATION_SPEED * delta_time);
             delayed_foreground.Size = new Vector2(delayed_value / unit.GetBaseUnitValue(UnitValue.Health) * size.X, size.Y);
 
-            base.Update(unit.GetBaseUnitValue(UnitValue.Health), unit.GetUnitValue(UnitValue.Health), dtime);
+            base.Update(unit.GetBaseUnitValue(UnitValue.Health), unit.GetUnitValue(UnitValue.Health), delta_time);
         }
 
         public override void Draw(SpriteBatch sprite_batch)

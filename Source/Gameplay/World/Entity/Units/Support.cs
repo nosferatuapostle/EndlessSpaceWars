@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace EndlessSpace
 {
@@ -14,6 +15,19 @@ namespace EndlessSpace
             }, position, new Vector2(64, 64), faction, null)
         {
             Name = "Support";
+
+            base_values = new Dictionary<UnitValue, UnitValueInfo>
+            {
+                { UnitValue.Health, new UnitValueInfo(UnitValue.Health, 4f) },
+                { UnitValue.Heal, new UnitValueInfo(UnitValue.Heal, 0.02f) },
+                { UnitValue.HealRate, new UnitValueInfo(UnitValue.HealRate, 1f, 2f) },
+                { UnitValue.CriticalChance, new UnitValueInfo(UnitValue.CriticalChance, 0f, 1f) },
+                { UnitValue.Magnitude, new UnitValueInfo(UnitValue.Magnitude, 1f) },
+                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 0.48f) },
+                { UnitValue.SpeedMult, new UnitValueInfo(UnitValue.SpeedMult, 1.04f, 2f) }
+            };
+
+            values_increase = new float[] { 0.75f, 0.01f, 0.01f, 0.0035f, 0.15f, 0.05f, 0.005f };
 
             switch (faction)
             {

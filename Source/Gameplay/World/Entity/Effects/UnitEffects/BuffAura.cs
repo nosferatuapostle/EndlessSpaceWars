@@ -62,7 +62,7 @@ namespace EndlessSpace
             {
                 float current_value = target.GetBaseUnitValue(values[i]);
                 value_increments[i] = value_mult_list[i] * base_magnitude;
-                target.SetBaseUnitValue(values[i], current_value + value_increments[i]);
+                target.SetUnitValue(values[i], current_value + value_increments[i]);
             }
         }
 
@@ -71,7 +71,7 @@ namespace EndlessSpace
             for (int i = 0; i < values.Length; i++)
             {
                 float current_value = target.GetBaseUnitValue(values[i]);
-                target.SetBaseUnitValue(values[i], current_value - value_increments[i]);
+                target.SetUnitValue(values[i], current_value - value_increments[i]);
             }
             base.OnEffectEnd();
         }

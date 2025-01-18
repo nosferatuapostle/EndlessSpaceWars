@@ -17,16 +17,18 @@ namespace EndlessSpace
 
         private void ReflectDamage(Unit victim, Unit source, ref float damage)
         {
+            if (source.Faction == UnitFaction.Summoned) return;
+
             float resistance = victim.GetUnitValue(UnitValue.DamageResist);
             float magnitude = source.GetUnitValue(UnitValue.Magnitude);
             float reflected_damage = damage * MathF.Min(1f, total_magnitude);
-            float finale_damge = reflected_damage.CalcDamage(resistance, magnitude);
+            float finale_damage = reflected_damage.Calc(resistance, magnitude);
 
-            if (finale_damge <= 0f) return;
-            if (finale_damge > 0.5f)
-                source.UnitInfo.AddFloatingDamage(finale_damge, Color.Red);
+            if (finale_damage <= 0f) return;
+            if (finale_damage > 0.5f)
+                source.UnitInfo.AddFloatingDamage(finale_damage, Color.Red);
 
-            source.RestoreUnitValue(UnitValue.Health, -finale_damge);
+            source.RestoreUnitValue(UnitValue.Health, -finale_damage);
 
             if (source.GetUnitValue(UnitValue.Health) <= 0)
             {

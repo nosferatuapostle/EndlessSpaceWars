@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using System;
-using System.Diagnostics;
 
 namespace EndlessSpace
 {
@@ -75,14 +74,6 @@ namespace EndlessSpace
             game_manager.Update(game_time);
 
             base.Update(game_time);
-        }
-
-        private double MeasureExecutionTime(Action action)
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            action.Invoke();
-            stopwatch.Stop();
-            return stopwatch.Elapsed.TotalMilliseconds;
         }
 
         protected override void Draw(GameTime game_time)

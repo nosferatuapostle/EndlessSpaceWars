@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoGame.Extended.Timers;
 using System;
-using System.Collections.Generic;
 
 namespace EndlessSpace
 {
@@ -11,10 +10,8 @@ namespace EndlessSpace
 
         public Func<Unit, object, Projectile> projectile;
         readonly Projectile prototype;
-        
-        CountdownTimer cooldown_time;
 
-        List<Unit> unit_list;
+        CountdownTimer cooldown_time;
 
         public Weapon(Unit owner, Func<Unit, object, Projectile> projectile)
         {
@@ -35,7 +32,7 @@ namespace EndlessSpace
             Cooldown.Update(game_time);
         }
 
-        public void PassProjectile(Unit target, float dtime)
+        public void PassProjectile(Unit target, float delta_time)
         {
             if (target == null || target.IsDead)
             {
@@ -45,8 +42,6 @@ namespace EndlessSpace
             }
 
             Target = target;
-            
-
             float distance = (target.Position - owner.Position).Length();
 
             if (Cooldown.State == TimerState.Completed)
@@ -63,8 +58,6 @@ namespace EndlessSpace
                     }
                 }
             }
-
-            owner.Rotation = owner.Rotate(owner.Rotation, owner.Position.ToAngle(target.Position), dtime);
         }
     }
 }

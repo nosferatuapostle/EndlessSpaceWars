@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace EndlessSpace
 {
@@ -14,6 +15,19 @@ namespace EndlessSpace
             }, position, new Vector2(128, 128), faction, null)
         {
             Name = "Dreadnought";
+
+            base_values = new Dictionary<UnitValue, UnitValueInfo>
+            {
+                { UnitValue.Health, new UnitValueInfo(UnitValue.Health, 5f) },
+                { UnitValue.Heal, new UnitValueInfo(UnitValue.Heal, 0.02f) },
+                { UnitValue.HealRate, new UnitValueInfo(UnitValue.HealRate, 1f, 2f) },
+                { UnitValue.CriticalChance, new UnitValueInfo(UnitValue.CriticalChance, 0f, 1f) },
+                { UnitValue.Magnitude, new UnitValueInfo(UnitValue.Magnitude, 1f) },
+                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 1.9f) },
+                { UnitValue.SpeedMult, new UnitValueInfo(UnitValue.SpeedMult, 1f, 2f) }
+            };
+
+            values_increase = new float[] { 1f, 0.01f, 0.01f, 0.003f, 0.1f, 0.07f, 0.0015f };
 
             switch (faction)
             {

@@ -5,7 +5,7 @@ namespace EndlessSpace
 {
     public static class Extensions
     {
-        public static float CalcDamage(this float damage, float resistance, float magnitude)
+        public static float Calc(this float damage, float resistance, float magnitude)
         {
             float damage_reduction = resistance / (resistance + MathF.PI);
             return damage * magnitude * (1f - damage_reduction);

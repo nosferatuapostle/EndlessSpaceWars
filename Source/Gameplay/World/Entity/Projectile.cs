@@ -102,8 +102,7 @@ namespace EndlessSpace
 
         public virtual void ProjPosition(GameTime game_time)
         {
-            Velocity = direction * speed;
-            Position += Velocity * game_time.GetElapsedSeconds();
+            Position += direction * speed * game_time.GetElapsedSeconds();
         }
 
         public virtual ParticleEffect Explosion()

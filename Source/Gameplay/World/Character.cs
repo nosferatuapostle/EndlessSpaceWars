@@ -1,14 +1,16 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Extended.Animations;
+﻿using MonoGame.Extended.Animations;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace EndlessSpace
 {
     public class Character : Unit
     {
+        public Unit type;
+
         public Skill current_skill;
         public List<Skill> skill_list = new List<Skill>();
-
+        
         static ulong next_id = 0;
         public ulong ID { get; private set; } = 0;
 
@@ -16,11 +18,14 @@ namespace EndlessSpace
         {
             ID = ++next_id;
 
+            type = unit;
             Name = unit.Name;
+
+            base_values = unit.Values;
 
             engine = unit.Engine;
             unit.Engine?.SetUnit(this);
-            
+
             ApplySpecific(unit, unit_list);
 
             CopyAnimations(unit.GetAnimations);
@@ -36,7 +41,7 @@ namespace EndlessSpace
             };
         }
 
-        public bool IsPlayerTeamate { get; protected set; } = false;
+        public bool IsPlayerTeammate { get; protected set; } = false;
 
         public static void ResetNextID()
         {
@@ -72,6 +77,16 @@ namespace EndlessSpace
             }
         }
 
+        public void UpdateStats(int init_level = 1)
+        {
+            for (int i = 0; i < type.IncreaseValues.Length; i++)
+            {
+                var element = type.Values.ElementAt(i);
+                var base_value = GetBaseUnitValue(element.Key);
+                SetBaseUnitValue(element.Key, base_value + type.IncreaseValues[i] * init_level);
+            }
+        }
+        
         protected override void OnDeath(Unit dying, Unit killer)
         {
             base.OnDeath(dying, killer);

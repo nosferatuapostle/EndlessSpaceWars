@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 
 namespace EndlessSpace
@@ -8,7 +7,7 @@ namespace EndlessSpace
     public class BasicObject
     {
         Texture2D texture;
-        Vector2 pos, dims, scale, vel;
+        Vector2 pos, dims, scale;
         float rot;
         Color color;
 
@@ -69,12 +68,6 @@ namespace EndlessSpace
             }
         }
 
-        public Vector2 Velocity
-        {
-            get { return vel; }
-            set { vel = value; }
-        }
-
         public float Rotation
         {
             get => Transform.Rotation;
@@ -100,7 +93,7 @@ namespace EndlessSpace
 
         public virtual RectangleF GetRectangle()
         {
-            return new RectangleF(pos - new Vector2(dims.X/3, dims.Y/3), dims/1.5f);
+            return new RectangleF(pos - new Vector2(dims.X / 3, dims.Y / 3), dims / 1.5f);
         }
 
         public virtual void Draw(SpriteBatch sprite_batch)

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 
@@ -6,8 +7,8 @@ namespace EndlessSpace
 {
     public class PlayerCharacter : Character
     {
-        public event Action on_level_changed;
-        
+        public event Action on_level_up;
+
         PlayerController controller;
         Experience experience;
 
@@ -17,22 +18,20 @@ namespace EndlessSpace
 
             experience = new Experience(this);
 
-            Level = 100;
-            SetBaseUnitValue(UnitValue.SpeedMult, 200f);
-            SetBaseUnitValue(UnitValue.Magnitude, 1f);
-            SetBaseUnitValue(UnitValue.DamageResist, 0f);
-
+            UpdateStats();
 
             skill_list.Add(new Heal(this));
             skill_list.Add(new Blink(this));
             skill_list.Add(new Summon(this, unit_list));
+
+            on_level_up += () => UpdateStats();
         }
 
         public bool IsUnKillable { get; private set; } = true;
         public void UnKillable() => IsUnKillable = !IsUnKillable;
 
         public Experience Experience => experience;
-        public void OnLevelChanged() => on_level_changed?.Invoke();
+        public void LevelUp() => on_level_up?.Invoke();
 
         public void SetFaction(UnitFaction faction) => Faction = faction;
 

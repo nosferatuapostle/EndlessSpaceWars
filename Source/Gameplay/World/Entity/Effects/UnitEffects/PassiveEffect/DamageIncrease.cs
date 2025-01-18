@@ -5,7 +5,7 @@ namespace EndlessSpace
     {
         protected override void ApplyEffect()
         {
-            source.SetBaseUnitValue(UnitValue.Magnitude, magnitude);
+            source.SetUnitValue(UnitValue.Magnitude, magnitude);
         }
     }
 }

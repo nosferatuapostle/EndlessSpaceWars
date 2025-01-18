@@ -49,7 +49,6 @@ namespace EndlessSpace
             }
 
             unit = CommandedNPC();
-            unit.Level = source.Level;
             EntityManager.PassUnit(unit);
             total_count++;
         }
@@ -67,17 +66,17 @@ namespace EndlessSpace
             switch (source.Level)
             {
                 case 1:
-                    return new NPC(new Scout(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source);
+                    return new NPC(new Scout(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
                 case 2:
-                    return new NPC(new Fighter(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source);
+                    return new NPC(new Fighter(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
                 case 3:
-                    return new NPC(new Frigate(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source);
+                    return new NPC(new Frigate(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
                 case 4:
-                    return new NPC(new Torpedo(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source);
+                    return new NPC(new Torpedo(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
                 case 5:
-                    return new NPC(new Support(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source);
+                    return new NPC(new Support(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
                 default:
-                    return new NPC(new Scout(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source);
+                    return new NPC(new Scout(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
             }
         }
     }

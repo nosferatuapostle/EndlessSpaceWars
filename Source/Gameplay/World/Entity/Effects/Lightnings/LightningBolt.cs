@@ -108,11 +108,6 @@ namespace EndlessSpace
         {
             return (float)rand.NextDouble() * (max - min) + min;
         }
-
-        private static float Square(float x)
-        {
-            return x * x;
-        }
     }
 
     public class Line

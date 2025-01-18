@@ -24,6 +24,7 @@ namespace EndlessSpace
         Unit unit;
         List<Unit> unit_list;
         PlayerCharacter player;
+        bool find_player;
                 
         Vector2 position, target_position;
         string text;
@@ -39,8 +40,6 @@ namespace EndlessSpace
             this.unit = unit;
             this.unit_list = unit_list;
 
-            player = unit_list.OfType<PlayerCharacter>().FirstOrDefault();
-
             text = string.Empty;
             color = Color.White;
 
@@ -49,7 +48,6 @@ namespace EndlessSpace
             health_bar = new HealthBar(unit);
 
             position = new Vector2((float)Math.Round(unit.Position.X - unit.Width / 2), (float)Math.Round(unit.Position.Y - unit.Height / 2 - 10f));
-            this.unit_list = unit_list;
         }
 
         public void AddFloatingDamage(float damage, Color color)
@@ -65,29 +63,32 @@ namespace EndlessSpace
 
         public virtual void Update(GameTime game_time)
         {
+            if (!find_player) player = unit_list.OfType<PlayerCharacter>().FirstOrDefault();
+
             health_bar.Update(game_time.GetElapsedSeconds());
             floating_damage.RemoveAll(f => f.Update(game_time));
 
             if (player != null && unit != player && unit is Character character)
             {
-                if (!character.IsPlayerTeamate && character.HostileTo(player))
+                find_player = true;
+                if (!character.IsPlayerTeammate && character.HostileTo(player))
                 {
                     int level_difference = unit.Level - player.Level;
 
-                    if (level_difference >= 20)
+                    if (level_difference >= 18)
                         color = Color.Purple;
                     else if (level_difference >= 10)
                         color = Color.Red;
-                    else if (level_difference >= 5)
+                    else if (level_difference >= 2)
                         color = Color.Orange;
-                    else if (level_difference >= 2 || level_difference >= -5)
+                    else if (level_difference >= -6)
                         color = Color.Gray;
                     else
                         color = Color.LightSteelBlue;
                 }
-                else if (!character.IsPlayerTeamate && !character.HostileTo(player))
+                else if (character != player && !character.IsPlayerTeammate && !character.HostileTo(player))
                 {
-                    color = Color.White;
+                    color = Color.CornflowerBlue;
                 }
                 else
                 {
@@ -114,9 +115,7 @@ namespace EndlessSpace
             foreach (FloatingDamage floating_damage in floating_damage)
                 floating_damage.Draw(sprite_batch, font);
 
-
-
-            CircleF circle = (CircleF)unit.Bounds;
+            /*CircleF circle = (CircleF)unit.Bounds;
             sprite_batch.DrawRectangle(unit.GetRectangle(), Color.White);
             sprite_batch.DrawCircle(circle, 64, Color.Red);
 
@@ -137,7 +136,7 @@ namespace EndlessSpace
                 }
 
                 sprite_batch.DrawCircle(npc.detection_radius, 100, Color.Green * 0.3f, 1f);
-            }
+            }*/
 
             if (!unit.IsDead)
             {
