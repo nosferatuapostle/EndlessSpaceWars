@@ -29,7 +29,7 @@ namespace EndlessSpace
                 Position = Position,
                 Emitters = new List<ParticleEmitter>
                 {
-                    new ParticleEmitter(new Texture2DRegion(Particle.Spark), 200, TimeSpan.FromSeconds(2.5), Profile.Circle(Width/2f, Profile.CircleRadiation.Out))
+                    new ParticleEmitter(new Texture2DRegion(Particle.Spark), 200, TimeSpan.FromSeconds(2.5), Profile.Circle(Size.X/2f, Profile.CircleRadiation.Out))
                     {
                         Parameters = new ParticleReleaseParameters
                         {

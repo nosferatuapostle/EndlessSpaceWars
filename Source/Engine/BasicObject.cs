@@ -93,7 +93,8 @@ namespace EndlessSpace
 
         public virtual RectangleF GetRectangle()
         {
-            return new RectangleF(pos - new Vector2(dims.X / 3, dims.Y / 3), dims / 1.5f);
+            Vector2 scaled = dims * Scale;
+            return new RectangleF(pos - scaled / 3f, scaled / 1.5f);
         }
 
         public virtual void Draw(SpriteBatch sprite_batch)

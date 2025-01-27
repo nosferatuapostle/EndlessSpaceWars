@@ -32,26 +32,29 @@ namespace EndlessSpace
             this.collision_component = collision_component;
         }
 
-        public List<Projectile> ProjList => projectile_list;
+        public List<Projectile> ProjectileList => projectile_list;
         public List<Unit> UnitList => unit_list;
 
         public void AddProjectile(object info) => pending_projectiles.Add((Projectile)info);
 
         public void AddUnit(object info) => pending_units.Add((Unit)info);
 
-        public void ProjRemover()
+        public void ProjectileRemover()
         {
             projectile_list.RemoveRange(0, projectile_list.Count);
+            for (int i = 0; i < projectile_list.Count; i++) collision_component.Remove(projectile_list[i]);
         }
 
         public void UnitRemover()
         {
             unit_list.RemoveRange(0, unit_list.Count);
+            for (int i = 0; i < unit_list.Count; i++) collision_component.Remove(unit_list[i]);
         }
 
         public void UnitRemover(Unit unit)
         {
             unit_list.Remove(unit);
+            collision_component.Remove(unit);
         }
 
         public void Update(GameTime game_time)
@@ -115,18 +118,12 @@ namespace EndlessSpace
         {
             foreach (Unit unit in unit_list)
             {
-                if (!unit.EffectTarget.IsThrob || unit.IsDead)
-                {
-                    if (unit.Movable) unit.Engine?.Draw(sprite_batch);
-                    unit.UnitInfo?.Draw(sprite_batch);
+                if (!(unit.IsHovered() || unit.is_selected) && !unit.EffectTarget.IsThrob || unit.IsDead)
+                {                    
                     unit.Draw(sprite_batch);
-
                 }
-                else
-                {
-                    unit.Engine?.Draw(sprite_batch);
-                    unit.UnitInfo?.Draw(sprite_batch);
-                }
+                if (unit.Movable) unit.Engine?.Draw(sprite_batch);
+                unit.UnitInfo?.Draw(sprite_batch);
             }
 
             foreach (Unit unit in unit_list)
@@ -138,7 +135,7 @@ namespace EndlessSpace
                     {
                         color = Color.Red;
                     }
-                    else if (unit is Character character && character.IsPlayerTeammate)
+                    else if ((unit as Character).IsPlayerTeammate)
                     {
                         color = Color.Green;
                     }
@@ -147,28 +144,23 @@ namespace EndlessSpace
                         color = Color.Blue;
                     }
 
-                    float outline_thickness = 1.8f / unit.Width / unit.FrameCount;
-                    Shader.Outline.Parameters["OutlineColor"].SetValue(color.ToVector4() * 0.5f);
-                    Shader.Outline.Parameters["OutlineThickness"].SetValue(outline_thickness);
-                    Shader.Outline.CurrentTechnique.Passes[0].Apply();
-
-                    /*if (unit.Faction != UnitFaction.Summoned)
+                    if (unit.Name != "Space Station" && unit.Faction != UnitFaction.Summoned)
                     {
-                        float outline_thickness = 1.8f / unit.Width / unit.FrameCount;
-                        Shader.Outline.Parameters["OutlineColor"].SetValue(color.ToVector4() * 0.8f);
-                        Shader.Outline.Parameters["OutlineThickness"].SetValue(outline_thickness);
-                        Shader.Outline.CurrentTechnique.Passes[0].Apply();
+                        float outline_thickness = 2.8f / unit.Size.X / unit.FrameCount;
+                        Shader.OutlineTransparent.Parameters["OutlineColor"].SetValue(color.ToVector4());
+                        Shader.OutlineTransparent.Parameters["OutlineThickness"].SetValue(outline_thickness);
+                        Shader.OutlineTransparent.CurrentTechnique.Passes[0].Apply();
+                        unit.Draw(sprite_batch);
                     }
                     else
                     {
-                        Shader.Grayscale.CurrentTechnique.Passes[0].Apply();
-                    }*/
-
-
-                    unit.Draw(sprite_batch);
+                        unit.Draw(sprite_batch);
+                        sprite_batch.DrawRectangle(unit.GetRectangle(), color * 0.75f);
+                    }
                 }
+                
 
-                if (unit.EffectTarget.IsThrob && !unit.IsDead && unit.Faction != UnitFaction.Summoned)
+                if (unit.EffectTarget.IsThrob && !unit.IsDead)
                 {
                     float sin_value = (float)Math.Sin((unit.EffectTarget.ThrobTimer.CurrentTime.TotalMilliseconds / unit.EffectTarget.ThrobTimer.Interval.TotalMilliseconds + Math.PI / 2) * (float)(Math.PI * 3));
                     Shader.Throb.Parameters["SINLOC"].SetValue(sin_value);
@@ -180,11 +172,11 @@ namespace EndlessSpace
             }
         }
 
-        public void DrawProj(SpriteBatch sprite_batch)
+        public void DrawProjectile(SpriteBatch sprite_batch)
         {
-            foreach (Projectile proj in projectile_list)
+            foreach (Projectile projectile in projectile_list)
             {
-                proj.Draw(sprite_batch);
+                projectile.Draw(sprite_batch);
                 //sprite_batch.DrawCircle((CircleF)proj.Bounds, 64, Color.Red * 0.75f);
             }
         }

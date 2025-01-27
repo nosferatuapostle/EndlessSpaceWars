@@ -21,9 +21,10 @@ namespace EndlessSpace
 
         protected AnimatedEngine engine;
         protected Weapon weapon;
+        protected List<Skill> skill_list = new List<Skill>();
 
         UnitEvent unit_event;
-        UnitInfo info;
+        protected UnitInfo info;
         protected float[] values_increase;
         protected Dictionary<UnitValue, UnitValueInfo> base_values;
 
@@ -50,11 +51,10 @@ namespace EndlessSpace
 
             Faction = faction;
 
-            if (unit_list != null)
-                info = new UnitInfo(this, unit_list);
+            if (unit_list != null) info = new UnitInfo(this, unit_list);
             
             movement = new Movable(this);
-            weapon = new Weapon(this, (owner, target) => new Pulsator(owner.Position, owner, (Unit)target));
+            weapon = new Weapon(this, (owner, target) => new LightningBoltProj(owner.Position, owner, (Unit)target));
             effect_target = new EffectTarget(this);
 
             unit_event.on_death += OnDeath;
@@ -69,6 +69,9 @@ namespace EndlessSpace
         public AnimatedEngine Engine => engine;
         public EffectTarget EffectTarget => effect_target;
 
+        public Weapon Weap => weapon;
+        public List<Skill> SkillList => skill_list;
+
         public int Level
         {
             get => level;
@@ -82,7 +85,7 @@ namespace EndlessSpace
         public UnitFaction Faction { get; protected set; } = UnitFaction.None;
 
         public Unit Target => weapon.Target;
-        public void Attack(Unit target, float delta_time)
+        public virtual void Attack(Unit target, float delta_time)
         {
             if (target == null || target.IsDead) return;
             if (weapon.Range < Vector2.Distance(Position, target.Position))
@@ -92,14 +95,15 @@ namespace EndlessSpace
             else
             {
                 MoveStop();
-                weapon.PassProjectile(target, delta_time);
                 Rotate(target.Position, delta_time);
+                weapon.PassProjectile(target, delta_time);
             }
         }
 
         public virtual bool HostileTo(Unit unit)
         {
             if (unit == this) return false;
+            if (unit is Character character && character.type is Asteroid) return false;
 
             return unit.Faction != Faction;
         }
@@ -147,15 +151,25 @@ namespace EndlessSpace
             if (collision_info.Other is Unit unit)
             {
                 float distance = Vector2.Distance(Position, unit.Position);
-                float radius = unit.Bounds.BoundingRectangle.Width / 4f;
+                float radius = (unit is Character asteroid && asteroid.type is Asteroid) ? (unit.Size * unit.Scale).X / 4f : unit.Bounds.BoundingRectangle.Width / 4f;
 
-                if (distance < radius)
+                if (distance == 0f)
                 {
-                    if (distance == 0f)
+                    Position += new Vector2(0.1f, 0.1f);
+                }
+                else if (unit is Character character && character.IsSpaceStation && !(this as Character).IsSpaceStation)
+                {
+                    Vector2 scaled = unit.Size * unit.Scale;
+                    RectangleF unit_rectangle = new RectangleF(unit.Position - scaled / 2f, scaled);
+
+                    if (Position.X > unit_rectangle.Left && Position.X < unit_rectangle.Right && Position.Y > unit_rectangle.Top && Position.Y < unit_rectangle.Bottom)
                     {
-                        Position += new Vector2(0.1f, 0.1f);
+                        Position -= Vector2.Normalize(unit.Position - Position);
                     }
-                    else
+                }
+                else
+                {
+                    if (distance < radius)
                     {
                         float strength = 1f - (distance / radius);
                         var direction = Vector2.Normalize(unit.Position - Position);
@@ -205,9 +219,18 @@ namespace EndlessSpace
             SetAnimation("death");
             if (killer is PlayerCharacter player && !dying.IsDead && dying != player)
             {
-                player.Experience.AddExp(1);
+                AddKillReward(player, dying);
             }
             IsDead = true;
+        }
+
+        protected void AddKillReward(PlayerCharacter player, Unit dying)
+        {
+            player.Experience.AddExp(MathF.Max(1f, dying.Level * (dying.Level / player.Level)));
+            return;
+            if (dying is NPC npc && npc.IsBoss)
+            {
+            }
         }
 
         public virtual void Kill()
@@ -223,7 +246,7 @@ namespace EndlessSpace
                 Position = Position,
                 Emitters =
                 {
-                    new ParticleEmitter(new Texture2DRegion(Particle.Spark), 20, TimeSpan.FromSeconds(1), Profile.Circle(Width/4f, Profile.CircleRadiation.Out))
+                    new ParticleEmitter(new Texture2DRegion(Particle.Spark), 20, TimeSpan.FromSeconds(1), Profile.Circle(Size.X/4f, Profile.CircleRadiation.Out))
                     {
                         Parameters = new ParticleReleaseParameters
                         {

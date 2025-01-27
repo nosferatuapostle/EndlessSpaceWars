@@ -26,9 +26,9 @@ namespace EndlessSpace
 
             gui_renderer = new ImGuiRenderer(game).Initialize().RebuildFontAtlas();
 
-            background = new Background(graphics_device);
-
             world = new World(graphics_device, window);
+
+            background = new Background(graphics_device, PlayerCharacter);
 
             cursor = new BasicObject("Textures\\UI\\PointerFilled", Vector2.Zero, new Vector2(22, 31) * 0.5f);
             user_interface = new UserInterface(world.PlayerCharacter);
@@ -47,10 +47,8 @@ namespace EndlessSpace
                 is_reset = false;
             }
 
-            /*if (Input.WasKeyPressed(Microsoft.Xna.Framework.Input.Keys.D5))
-                EntityManager.AddUnit(new NPC(new Scout(new Vector2(-200, -200), UnitFaction.Biomantes), EntityManager.UnitList));*/
-
             world.Update(game_time);
+            background.Update(game_time);
 
             user_interface.Update(graphics_device, game_time);
         }
@@ -122,23 +120,24 @@ namespace EndlessSpace
 
             foreach (var unit in EntityManager.UnitList)
             {
+                if (unit == null) return;
                 ImGui.Separator();
                 var character = unit as Character;
-                ImGui.Text($"Name: {unit.Name}, ID: {character.ID}, Level: {character.Level}");
+                ImGui.Text($"Name: {unit.Name}, ID: {character?.ID}, Level: {unit.Level}");
                 ImGui.Text("");
                 ImGui.Text($"Faction: {unit.Faction}");
-                ImGui.Text($"IsPlayerTeammate: {character.IsPlayerTeammate}");
-                ImGui.Text($"IsDead: {character.IsDead}");
-                ImGui.Text($"X: {character.Position.X}, Y: {character.Position.Y}");
+                ImGui.Text($"IsPlayerTeammate: {character?.IsPlayerTeammate}");
+                ImGui.Text($"IsDead: {unit.IsDead} IsDestroyed: {unit.IsDestroyed}");
+                ImGui.Text($"X: {unit.Position.X}, Y: {unit.Position.Y}");
 
                 ImGui.Text("");
-                ImGui.Text($"Health: {character.GetUnitValue(UnitValue.Health)}");
-                ImGui.Text($"Heal: {character.GetUnitValue(UnitValue.Heal)}");
-                ImGui.Text($"HealRate: {character.GetUnitValue(UnitValue.HealRate)}");
-                ImGui.Text($"CriticalChance: {character.GetUnitValue(UnitValue.CriticalChance)}");
-                ImGui.Text($"Magnitude: {character.GetUnitValue(UnitValue.Magnitude)}");
-                ImGui.Text($"DamageResist: {character.GetUnitValue(UnitValue.DamageResist)}");
-                ImGui.Text($"SpeedMult: {character.GetUnitValue(UnitValue.SpeedMult)}");
+                ImGui.Text($"Health: {unit.GetUnitValue(UnitValue.Health)}");
+                ImGui.Text($"Heal: {unit.GetUnitValue(UnitValue.Heal)}");
+                ImGui.Text($"HealRate: {unit.GetUnitValue(UnitValue.HealRate)}");
+                ImGui.Text($"CriticalChance: {unit.GetUnitValue(UnitValue.CriticalChance)}");
+                ImGui.Text($"Magnitude: {unit.GetUnitValue(UnitValue.Magnitude)}");
+                ImGui.Text($"DamageResist: {unit.GetUnitValue(UnitValue.DamageResist)}");
+                ImGui.Text($"SpeedMult: {unit.GetUnitValue(UnitValue.SpeedMult)}");
                 ImGui.Text("");
 
                 if (unit.EffectTarget.ActiveEffects.Count > 0)
@@ -165,7 +164,7 @@ namespace EndlessSpace
                         foreach (var detected_unit in npc.detected_units)
                         {
                             var detected_char = detected_unit as Character;
-                            ImGui.Text($"{detected_char.Name}, ID: {detected_char.ID}");
+                            ImGui.Text($"{detected_char?.Name}, ID: {detected_char?.ID}");
                         }
                         ImGui.Text("");
                     }

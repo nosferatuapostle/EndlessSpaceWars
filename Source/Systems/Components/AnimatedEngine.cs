@@ -17,13 +17,13 @@ namespace EndlessSpace
             Position = unit.Position + offset;
             Rotation = unit.Rotation;
 
-            atlases = new Texture2DAtlas[path.Length];
-            sheets = new SpriteSheet[atlases.Length];
+            atlas = new Texture2DAtlas[path.Length];
+            sheets = new SpriteSheet[atlas.Length];
 
             for (int i = 0; i < path.Length; i++)
             {
-                atlases[i] = Texture2DAtlas.Create(null, Globals.Content.Load<Texture2D>(path[i]), unit.Width, unit.Height);
-                sheets[i] = new SpriteSheet(null, atlases[i]);
+                atlas[i] = Texture2DAtlas.Create(null, Globals.Content.Load<Texture2D>(path[i]), (int)unit.Size.X, (int)unit.Size.Y);
+                sheets[i] = new SpriteSheet(null, atlas[i]);
             }
 
             AddAnimation(0, "base", frames);

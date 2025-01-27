@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Extended;
 using MonoGame.Extended.Graphics;
 using MonoGame.Extended.Particles;
 using System;
@@ -14,11 +13,11 @@ namespace EndlessSpace
 
         int x, y;
 
-        protected Texture2DAtlas[] atlases;
+        protected Texture2DAtlas[] atlas;
         protected SpriteSheet[] sheets;
         protected AnimatedSprite animated_sprite;
         protected Dictionary<string, AnimatedSprite> animations = new Dictionary<string, AnimatedSprite>();
-        
+
         public AnimatedSprite AnimatedSprite => animated_sprite;
 
         public AnimatedObject(string[] path, Vector2 position, Vector2 size) : base(null, position, size)
@@ -29,12 +28,12 @@ namespace EndlessSpace
 
             if (path != null && size != Vector2.Zero)
             {
-                atlases = new Texture2DAtlas[path.Length];
-                sheets = new SpriteSheet[atlases.Length];
+                atlas = new Texture2DAtlas[path.Length];
+                sheets = new SpriteSheet[atlas.Length];
                 for (int i = 0; i < path.Length; i++)
                 {
-                    atlases[i] = Texture2DAtlas.Create(null, Globals.Content.Load<Texture2D>(path[i]), x, y);
-                    sheets[i] = new SpriteSheet(null, atlases[i]);
+                    atlas[i] = Texture2DAtlas.Create(null, Globals.Content.Load<Texture2D>(path[i]), x, y);
+                    sheets[i] = new SpriteSheet(null, atlas[i]);
                 }
             }
         }
@@ -42,8 +41,6 @@ namespace EndlessSpace
         public string[] GetPath => path;
         public Dictionary<string, AnimatedSprite> GetAnimations => animations;
 
-        public int Width => x;
-        public int Height => y;
         public int FrameCount => animated_sprite == null ? 0 : animated_sprite.Controller.FrameCount;
 
         public void AddAnimation(SpriteSheet sprite_sheet, string name, int frame_count, bool is_loop = true, float duration = 0.1f)

@@ -6,6 +6,7 @@ namespace EndlessSpace
     public class HealthBar : ProgressBar
     {
         Unit unit;
+        Vector2 unit_size;
         float delayed_value;
         BasicObject delayed_foreground;
         const float ANIMATION_SPEED = 1f;
@@ -13,8 +14,9 @@ namespace EndlessSpace
         public HealthBar(Unit unit) : base(Vector2.Zero, Vector2.Zero)
         {
             this.unit = unit;
+            unit_size = unit.Size * unit.Scale;
 
-            size = new Vector2(unit.Width / 2f, 4f);
+            size = new Vector2(unit_size.X / 2f, 4f);
             delayed_value = unit.GetUnitValue(UnitValue.Health);
             delayed_foreground = new BasicObject("Textures\\UI\\ProgressBarWhite", Vector2.Zero, size);
 
@@ -33,7 +35,8 @@ namespace EndlessSpace
                     delayed_foreground.Color = Color.IndianRed * 0.5f;
                     break;
                 default:
-                    color = Color.Red;
+                    color = Color.LightBlue;
+                    delayed_foreground.Color = Color.LightBlue * 0.5f;
                     break;
             }
 
@@ -46,7 +49,7 @@ namespace EndlessSpace
 
         public virtual void Update(float delta_time)
         {
-            Vector2 target_position = new Vector2((int)(unit.Position.X - size.X / 2f), (int)(unit.Position.Y + unit.Height / 2f));
+            Vector2 target_position = new Vector2((int)(unit.Position.X - size.X / 2f), (int)(unit.Position.Y + unit_size.Y / 2f));
 
             position = target_position;
 

@@ -1,4 +1,6 @@
-﻿using MonoGame.Extended.Animations;
+﻿using Microsoft.Xna.Framework;
+using MonoGame.Extended;
+using MonoGame.Extended.Animations;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +11,6 @@ namespace EndlessSpace
         public Unit type;
 
         public Skill current_skill;
-        public List<Skill> skill_list = new List<Skill>();
         
         static ulong next_id = 0;
         public ulong ID { get; private set; } = 0;
@@ -19,12 +20,19 @@ namespace EndlessSpace
             ID = ++next_id;
 
             type = unit;
+            IsSpaceStation = unit is SpaceStation;
             Name = unit.Name;
+            Scale = unit.Scale;
 
             base_values = unit.Values;
 
             engine = unit.Engine;
             unit.Engine?.SetUnit(this);
+
+            //weapon = unit.Weap;
+            skill_list = unit.SkillList;
+
+            if (unit_list != null) info = new UnitInfo(this, unit_list);
 
             ApplySpecific(unit, unit_list);
 
@@ -40,6 +48,8 @@ namespace EndlessSpace
                 }
             };
         }
+
+        public bool IsSpaceStation { get; private set; }
 
         public bool IsPlayerTeammate { get; protected set; } = false;
 
@@ -86,10 +96,13 @@ namespace EndlessSpace
                 SetBaseUnitValue(element.Key, base_value + type.IncreaseValues[i] * init_level);
             }
         }
-        
-        protected override void OnDeath(Unit dying, Unit killer)
+
+        public override RectangleF GetRectangle()
         {
-            base.OnDeath(dying, killer);
+            Vector2 scaled = Size * Scale;
+            if (Faction == UnitFaction.Summoned || Name == "Space Station") return new RectangleF(Position - scaled / 2f, scaled);
+            if (type is Asteroid) return new RectangleF(Position - scaled / 4f, scaled / 2f);
+            return base.GetRectangle();
         }
     }
 }

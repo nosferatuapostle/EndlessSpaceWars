@@ -45,7 +45,7 @@ namespace EndlessSpace
 
         private NPC Summoned()
         {
-            float distance = owner.Width;
+            float distance = owner.Size.X;
             float rotation = owner.Rotation;
 
             float x_offset = distance * MathF.Cos(rotation - MathF.PI / 2f);

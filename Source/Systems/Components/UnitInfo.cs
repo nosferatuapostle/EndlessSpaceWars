@@ -24,9 +24,8 @@ namespace EndlessSpace
         Unit unit;
         List<Unit> unit_list;
         PlayerCharacter player;
-        bool find_player;
                 
-        Vector2 position, target_position;
+        Vector2 unit_size, position, target_position;
         string text;
         BitmapFont font;
         Color color;
@@ -47,7 +46,8 @@ namespace EndlessSpace
 
             health_bar = new HealthBar(unit);
 
-            position = new Vector2((float)Math.Round(unit.Position.X - unit.Width / 2), (float)Math.Round(unit.Position.Y - unit.Height / 2 - 10f));
+            unit_size = unit.Size * unit.Scale;
+            position = new Vector2((float)Math.Round(unit.Position.X - unit_size.X / 2f), (float)Math.Round(unit.Position.Y - unit_size.X / 2f - 10f));
         }
 
         public void AddFloatingDamage(float damage, Color color)
@@ -55,22 +55,21 @@ namespace EndlessSpace
             string damage_text = Math.Round(damage).ToString();
             SizeF text_size = font.MeasureString(damage_text);
             Vector2 text_position = new Vector2(
-                unit.Position.X - text_size.Width / 2,
-                unit.Position.Y - unit.Height / 2 - 24f
+                unit.Position.X - text_size.Width / 2f,
+                unit.Position.Y - unit_size.Y / 2f - 24f
             );
             floating_damage.Add(new FloatingDamage(damage_text, text_position, color));
         }
 
         public virtual void Update(GameTime game_time)
         {
-            if (!find_player) player = unit_list.OfType<PlayerCharacter>().FirstOrDefault();
+            if (player == null) player = unit_list.OfType<PlayerCharacter>().FirstOrDefault();
 
             health_bar.Update(game_time.GetElapsedSeconds());
             floating_damage.RemoveAll(f => f.Update(game_time));
 
             if (player != null && unit != player && unit is Character character)
             {
-                find_player = true;
                 if (!character.IsPlayerTeammate && character.HostileTo(player))
                 {
                     int level_difference = unit.Level - player.Level;
@@ -105,16 +104,13 @@ namespace EndlessSpace
             float y = unit.Position.Y - 10f;
             if (unit.Faction == UnitFaction.Summoned)
                 y = unit.Position.Y - 32f;
-            target_position = new Vector2((float)Math.Round(unit.Position.X - text_size.Width / 2), (float)Math.Round(y - unit.Height/2f));
+            target_position = new Vector2((float)Math.Round(unit.Position.X - text_size.Width / 2f), (float)Math.Round(y - unit_size.Y / 2f));
 
             position = target_position;
         }
 
         public virtual void Draw(SpriteBatch sprite_batch)
         {
-            foreach (FloatingDamage floating_damage in floating_damage)
-                floating_damage.Draw(sprite_batch, font);
-
             /*CircleF circle = (CircleF)unit.Bounds;
             sprite_batch.DrawRectangle(unit.GetRectangle(), Color.White);
             sprite_batch.DrawCircle(circle, 64, Color.Red);
@@ -128,7 +124,7 @@ namespace EndlessSpace
                 if (unit.Faction == UnitFaction.Summoned)
                     y = unit.Position.Y + 20f;
 
-                Vector2 text_position = new Vector2((float)Math.Round(unit.Position.X - text_size.Width / 2), (float)Math.Round(y + unit.Size.Y / 2f));
+                Vector2 text_position = new Vector2((float)Math.Round(unit.Position.X - text_size.Width / 2f), (float)Math.Round(y + unit.Size.Y / 2f));
 
                 if (!string.IsNullOrEmpty(text))
                 {
@@ -145,6 +141,9 @@ namespace EndlessSpace
                 if (unit.GetUnitValue(UnitValue.Health) < unit.GetBaseUnitValue(UnitValue.Health) && unit.Faction != UnitFaction.Summoned)
                     health_bar.Draw(sprite_batch);
             }
+
+            foreach (FloatingDamage floating_damage in floating_damage)
+                floating_damage.Draw(sprite_batch, font);
         }
     }
 }

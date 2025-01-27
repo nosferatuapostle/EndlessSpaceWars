@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
 using MonoGame.Extended.Collisions.Layers;
@@ -38,27 +39,36 @@ namespace EndlessSpace
             EffectManager.PassLightning = effect_manager.AddLightning;
 
             Vector2 position = new Vector2(graphics_device.Viewport.Width / 2, graphics_device.Viewport.Height / 2);
-            player = new PlayerCharacter(new Dreadnought(position, UnitFaction.DuskFleet), entity_manager.UnitList);
-
-            //player = new PlayerCharacter(new Scout(position, UnitFaction.Biomantes), entity_manager.UnitList);
-            entity_manager.AddUnit(player);
+            player = new PlayerCharacter(new Scout(position, UnitFaction.IronCorpse), entity_manager.UnitList);
+            EntityManager.PassUnit(player);
 
             encounter_zone = new EncounterZone(player, entity_manager.UnitList);
+
+            NPC station = new NPC(new SpaceStation(pos + new Vector2(1200f, 0f), UnitFaction.IronCorpse), entity_manager.UnitList, 1);
+            station.SetBehavior(Behavior.None);
+            NPC asteroid = new NPC(new Asteroid(pos + new Vector2(1600f, 0f)), entity_manager.UnitList, 1);
+            asteroid.SetBehavior(Behavior.None);
+            EntityManager.PassUnit(station);
+            EntityManager.PassUnit(asteroid);
         }
 
         public static OrthographicCamera Camera => camera;
         public EntityManager EntityManager => entity_manager;
         public PlayerCharacter PlayerCharacter => player;
 
+        bool camera_to_player = false;
         public void Update(GameTime game_time)
         {
             EntityManager.UnitsCount = entity_manager.UnitList.Count;
 
-            /*if (Input.WasKeyPressed(Keys.E))
+            if (Input.WasKeyPressed(Keys.Space))
             {
-                player.EffectTarget.AddEffect(new AuraBattlecruiser(player, EntityManager.UnitList));
-                player.GetDamage(player, 1f);
-            }*/
+                camera_to_player = !camera_to_player;
+            }
+            if (camera_to_player)
+            {
+                Camera.LookAt(player.Position);
+            }
 
             camera_controller.Update(game_time);
 
@@ -84,11 +94,12 @@ namespace EndlessSpace
             sprite_batch.End();*/
 
             sprite_batch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.AnisotropicWrap, transformMatrix: transform);
-            entity_manager.DrawProj(sprite_batch);
+            entity_manager.DrawProjectile(sprite_batch);
             effect_manager.Draw(sprite_batch);
             sprite_batch.End();
 
-            sprite_batch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicWrap, transformMatrix: transform);
+            sprite_batch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicWrap, transformMatrix: transform/*, effect: Shader.AntiAliasing*/);
+            
             entity_manager.DrawUnit(sprite_batch);
             sprite_batch.End();
 

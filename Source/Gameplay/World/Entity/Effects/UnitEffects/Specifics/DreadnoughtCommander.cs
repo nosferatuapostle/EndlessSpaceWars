@@ -55,7 +55,7 @@ namespace EndlessSpace
 
         private NPC CommandedNPC()
         {
-            float distance = source.Width;
+            float distance = source.Size.X;
             float rotation = source.Rotation;
 
             float x_offset = distance * MathF.Cos(rotation - MathF.PI / 2f);

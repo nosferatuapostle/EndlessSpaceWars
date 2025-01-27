@@ -13,8 +13,6 @@ namespace EndlessSpace
     {
         public event Action<Unit> on_hit;
 
-        public bool is_origin;
-
         bool is_done;
         protected float speed, damage;
 
@@ -23,18 +21,16 @@ namespace EndlessSpace
         protected Unit owner;
         object target;
 
-        protected CountdownTimer proj_time;
+        protected CountdownTimer life_time;
 
         public Projectile(string[] path, Vector2 position, Vector2 size, Unit owner, object target) : base(path, position, size)
         {
-            is_origin = true;
-
             is_done = false;
             speed = 0f;
             damage = 0f;
             this.owner = owner;
             this.target = target;
-            proj_time = new CountdownTimer(25f);
+            life_time = new CountdownTimer(25f);
 
             if (target == null) return;
             direction = direction = Vector2.Normalize(GetTarget - Position);
@@ -53,7 +49,7 @@ namespace EndlessSpace
         {
             if (collisionInfo.Other is Unit unit && unit != owner && unit == target && !unit.IsDead)
             {
-                float radius = unit.Width/4f;
+                float radius = unit.Faction == UnitFaction.Summoned ? unit.Size.X : unit.Size.X / 4f;
                 float distance = Vector2.Distance(Position, unit.Position);
 
                 if (distance > radius) return;
@@ -70,10 +66,7 @@ namespace EndlessSpace
 
         protected virtual void OnHit(Unit target, Color color)
         {
-            if (is_origin)
-            {
-                on_hit?.Invoke(target);
-            }
+            on_hit?.Invoke(target);
             target.GetDamage(owner, damage, color);
         }
 
@@ -90,8 +83,8 @@ namespace EndlessSpace
                 ProjPosition(game_time);
             }
 
-            proj_time.Update(game_time);
-            if (proj_time.State == TimerState.Completed)
+            life_time.Update(game_time);
+            if (life_time.State == TimerState.Completed)
             {
                 is_done = true;
             }

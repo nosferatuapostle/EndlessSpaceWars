@@ -38,17 +38,17 @@ namespace EndlessSpace
         {
             if (e.Key == Keys.Q)
             {
-                player.current_skill = player.skill_list[0];
+                player.current_skill = player.SkillList[0];
                 player.current_skill.Active = true;
             }
             if (e.Key == Keys.W)
             {
-                player.current_skill = player.skill_list[1];
+                player.current_skill = player.SkillList[1];
                 player.current_skill.Active = true;
             }
             if (e.Key == Keys.E)
             {
-                player.current_skill = player.skill_list[2];
+                player.current_skill = player.SkillList[2];
                 player.current_skill.Active = true;
             }
         }
@@ -109,7 +109,7 @@ namespace EndlessSpace
 
                 foreach (var unit in unit_list)
                 {
-                    if (unit == null || unit is PlayerCharacter) continue;
+                    if (unit == null || unit.Faction == UnitFaction.Summoned || unit is PlayerCharacter) continue;
                     if (unit.IsHovered())
                     {
                         target_unit = unit;
