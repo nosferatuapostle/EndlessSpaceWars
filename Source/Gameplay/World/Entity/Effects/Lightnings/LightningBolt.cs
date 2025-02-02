@@ -127,7 +127,7 @@ namespace EndlessSpace
         public void Draw(SpriteBatch sprite_batch, Color color)
         {
             Vector2 tangent = B - A;
-            float rotation = (float)Math.Atan2(tangent.Y, tangent.X);
+            float rotation = (float)MathF.Atan2(tangent.Y, tangent.X);
             const float ImageThickness = 8;
             float thicknessScale = Thickness / ImageThickness;
             Vector2 capOrigin = new Vector2(Particle.HalfCircle.Width, Particle.HalfCircle.Height / 2f);

@@ -8,7 +8,6 @@ using System;
 using MonoGame.Extended.Particles.Modifiers;
 using MonoGame.Extended.Particles.Modifiers.Containers;
 using System.Collections.Generic;
-using MonoGame.Extended.Timers;
 
 namespace EndlessSpace
 {
@@ -21,8 +20,6 @@ namespace EndlessSpace
             Name = "TestParticles";
             damage = 0f;
             speed = 500f;
-            periodic = true;
-            tick_time = new CountdownTimer(0.2f);
 
             particle_effect = new ParticleEffect()
             {

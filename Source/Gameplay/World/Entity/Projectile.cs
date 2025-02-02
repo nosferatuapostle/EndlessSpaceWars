@@ -12,9 +12,10 @@ namespace EndlessSpace
     public class Projectile : AnimatedObject, ICollisionActor
     {
         public event Action<Unit> on_hit;
+        public event Action on_destroy;
 
-        bool is_done;
-        protected float speed, damage;
+        protected bool is_done;
+        protected float radius, speed, damage;
 
         Vector2 direction;
 
@@ -30,44 +31,62 @@ namespace EndlessSpace
             damage = 0f;
             this.owner = owner;
             this.target = target;
-            life_time = new CountdownTimer(25f);
+            life_time = new CountdownTimer(18f);
+
+            Vector2 scaled_size = Size * Scale;
+            radius = MathF.Sqrt(scaled_size.X * scaled_size.X + scaled_size.Y * scaled_size.Y) / 4f;
 
             if (target == null) return;
-            direction = direction = Vector2.Normalize(GetTarget - Position);
+            direction = direction = Vector2.Normalize((target as Unit).Position - Position);
             Rotation = Position.ToAngle(GetTarget);
         }
 
         public bool IsDone { get { return is_done; } }
+        public float Radius { get { return radius; } }
 
         public string Name { get; set; } = "None";
         public Vector2 GetTarget { get { return target is Unit unit ? unit.Position : (Vector2)target; } }
 
+        public float Damage { get { return damage; } }
         public float Range { get; protected set; } = 100f;
         public CountdownTimer Cooldown { get; protected set; } = new CountdownTimer(1f);
 
-        public virtual void OnCollision(CollisionEventArgs collisionInfo)
-        {
-            if (collisionInfo.Other is Unit unit && unit != owner && unit == target && !unit.IsDead)
-            {
-                float radius = unit.Faction == UnitFaction.Summoned ? unit.Size.X : unit.Size.X / 4f;
-                float distance = Vector2.Distance(Position, unit.Position);
+        public void OnDestroy() => on_destroy?.Invoke();
 
-                if (distance > radius) return;
-                OnHit(unit);
+        public virtual void OnCollision(CollisionEventArgs collision_info)
+        {
+            if (collision_info.Other is not Unit unit || !HitCondition(unit)) return;
+            if (unit.Faction == UnitFaction.Summoned) return;
+            if (unit.HasKeyword("space_station"))
+            {
+                RectangleF base_rect = unit.GetRectangle();
+                base_rect.Inflate(-base_rect.Width * 0.2f, -base_rect.Height * 0.2f);
+
+                if (!base_rect.Intersects(new RectangleF(Position.X - radius, Position.Y - radius, radius * 2, radius * 2)))
+                    return;
             }
+            else
+            {
+                float total_radius = (unit.Radius / 2f + radius) * (unit.Radius / 2f + radius);
+                float distance = Vector2.DistanceSquared(Position, unit.Position);
+                if (distance > total_radius) return;
+            }
+            OnHit(unit);
         }
+
+        protected virtual bool HitCondition(Unit unit) => unit != owner && unit == target && !unit.IsDead;
 
         protected virtual void OnHit(Unit target)
         {
-            Bounds = new CircleF(Vector2.Zero, 0);
-            OnHit(target, Color.Red);
-            is_done = true;
+            on_hit?.Invoke(target);
+            HitAction(target);
         }
 
-        protected virtual void OnHit(Unit target, Color color)
+        protected virtual void HitAction(Unit target)
         {
-            on_hit?.Invoke(target);
-            target.GetDamage(owner, damage, color);
+            Bounds = new CircleF(Vector2.Zero, 0);
+            target.GetDamage(owner, damage, Color.Red);
+            is_done = true;
         }
 
         public override void Update(GameTime game_time)

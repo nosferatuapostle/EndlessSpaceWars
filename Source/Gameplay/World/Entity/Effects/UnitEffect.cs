@@ -13,11 +13,8 @@ namespace EndlessSpace
 
         protected PlayerCharacter player;
 
-        protected Unit source;
-        protected Unit target;
+        protected Unit source, target;
         protected float base_magnitude, magnitude;
-
-        bool was_applied;
 
         CountdownTimer effect_time;
         CountdownTimer tick_time;
@@ -29,7 +26,6 @@ namespace EndlessSpace
             ID = ++next_id;
 
             Name = name;
-            was_applied = false;
 
             this.source = source;
             this.target = target;
@@ -41,9 +37,10 @@ namespace EndlessSpace
 
             particle_effect = new ParticleEffect();
 
+            source.Event.on_death += OnDeath;
             if (source is PlayerCharacter player) this.player = player;
             if (this.player == null) return;
-            this.player.on_level_up += OnLevelChanged;
+            this.player.on_level_up += OnLevelUp;
         }
 
         public static ulong ResetID() => next_id = 0;
@@ -53,30 +50,18 @@ namespace EndlessSpace
 
         protected void UpdateMagnitude() => magnitude = base_magnitude * source.GetUnitValue(UnitValue.Magnitude);
 
-        protected virtual void OnLevelChanged() { }
+        private void OnDeath(Unit source, Unit target) => IsDone = true;
+        protected virtual void OnLevelUp() { }
 
         public virtual void Update(GameTime game_time)
         {
             particle_effect.Update(game_time.GetElapsedSeconds());
 
-            if (!was_applied && tick_time == null)
-            {
-                ApplyEffect();
-                was_applied = true;
-                return;
-            }
-
-            if (effect_time != null)
-            {
-                effect_time.Update(game_time);
-                if (effect_time.State == TimerState.Completed)
-                {
-                    IsDone = true;
-                }
-            }
+            if (effect_time == null) return;
+            effect_time.Update(game_time);
+            if (effect_time.State == TimerState.Completed) IsDone = true;
 
             if (tick_time == null) return;
-
             tick_time.Update(game_time);
             if (tick_time.State == TimerState.Completed)
             {
@@ -89,8 +74,9 @@ namespace EndlessSpace
 
         public virtual void OnEffectEnd()
         {
+            source.Event.on_death -= OnDeath;
             if (player == null) return;
-            player.on_level_up -= OnLevelChanged;
+            player.on_level_up -= OnLevelUp;
         }
 
         public virtual void Draw(SpriteBatch sprite_batch)

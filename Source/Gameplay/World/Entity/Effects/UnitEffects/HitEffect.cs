@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace EndlessSpace
 {
     public abstract class HitEffect : UnitEffect
     {
-        public HitEffect(string name, Unit source, Weapon weapon) : base(name, source, null, 0f, 0f, 0f)
+        protected Weapon weapon;
+
+        public HitEffect(string name, Unit source, Weapon weapon, float duration = 0f) : base(name, source, null, 0f, duration, 0f)
         {
+            this.weapon = weapon;
             var original_projectile = weapon.projectile;
             weapon.projectile = (owner, target) =>
             {

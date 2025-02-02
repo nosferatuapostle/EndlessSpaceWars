@@ -9,11 +9,10 @@ namespace EndlessSpace
         bool was_attack;
         CountdownTimer timer;
 
-        public TorpedoDoubleHit(Unit source, Weapon weapon)
-            : base("Torpedo Double Hit", source, null, 0f, 0f, 0f)
+        public TorpedoDoubleHit(Unit source, Weapon weapon) : base("Torpedo Double Hit", source, null, 0f, 0f, 0f)
         {
             this.weapon = weapon;
-            this.was_attack = false;
+            was_attack = false;
 
             timer = new CountdownTimer(0.2f);
 
@@ -38,12 +37,12 @@ namespace EndlessSpace
             {
                 was_attack = false;
 
-                if (target != null && !target.IsDead)
-                {
-                    Projectile projectile = weapon.projectile(source, target);
-                    EntityManager.PassProjectile(projectile);
-                }
+                if (target == null || target.IsDead) goto skip;
+
+                Projectile projectile = weapon.projectile(source, target);
+                EntityManager.PassProjectile(projectile);
             }
+            skip:
 
             base.Update(game_time);
         }

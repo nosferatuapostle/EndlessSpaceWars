@@ -2,7 +2,7 @@
 
 namespace EndlessSpace
 {
-    public class Blink(Unit owner) : Skill("Blink", owner)
+    public class Blink(Unit owner) : Skill("Blink", Tag.Escape, owner, 0f)
     {
         protected override void Use()
         {

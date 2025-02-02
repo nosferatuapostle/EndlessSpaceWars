@@ -29,6 +29,9 @@ namespace EndlessSpace
 
             values_increase = new float[] { 0.8f, 0.01f, 0.01f, 0.004f, 0.125f, 0.05f, 0.005f };
 
+            projectile = (owner, target) => new Penetrator(owner.Position, owner, (Unit)target);
+
+
             switch (faction)
             {
                 case UnitFaction.Biomantes:

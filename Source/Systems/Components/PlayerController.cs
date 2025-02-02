@@ -38,18 +38,27 @@ namespace EndlessSpace
         {
             if (e.Key == Keys.Q)
             {
-                player.current_skill = player.SkillList[0];
-                player.current_skill.Active = true;
+                player.current_skill = player.Skills[0];
+                player.used_skills.Add(player.current_skill);
+                player.current_skill.Activate();
             }
             if (e.Key == Keys.W)
             {
-                player.current_skill = player.SkillList[1];
-                player.current_skill.Active = true;
+                player.current_skill = player.Skills[1];
+                player.used_skills.Add(player.current_skill);
+                player.current_skill.Activate();
             }
             if (e.Key == Keys.E)
             {
-                player.current_skill = player.SkillList[2];
-                player.current_skill.Active = true;
+                player.current_skill = player.Skills[2];
+                player.used_skills.Add(player.current_skill);
+                player.current_skill.Activate();
+            }
+            if (e.Key == Keys.R)
+            {
+                player.current_skill = player.Skills[3];
+                player.used_skills.Add(player.current_skill);
+                player.current_skill.Activate();
             }
         }
 
@@ -61,8 +70,6 @@ namespace EndlessSpace
             float delta_time = game_time.GetElapsedSeconds();
 
             if (Input.WasKeyPressed(Keys.K)) selected_unit?.Kill();
-
-            player.current_skill?.Update();
 
             if (Input.IsKeyDown(Keys.F1))
             {
@@ -88,18 +95,13 @@ namespace EndlessSpace
                 {
                     player.MoveTo(target_pos);
                 }
-                //player.Rotation = Rotate(target_pos, delta_time);
             }
 
             if (target_state == TargetState.Unit && target_unit != null)
             {
                 player.Attack(target_unit, delta_time);
-                //player.Rotation = Rotate(target_unit.Position, delta_time);
             }
         }
-
-        //private float Rotate(Vector2 position, float delta_time) => player.Rotate(player.Rotation, player.Position.ToAngle(position), delta_time);
-
         private void InputHandler(List<Unit> unit_list, Vector2 mouse_position)
         {
             if (Input.IsMouseButtonDown(MouseButton.Right))

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.ImGui;
+using System.Linq;
 
 namespace EndlessSpace
 {
@@ -39,12 +40,17 @@ namespace EndlessSpace
 
         public void Update(GameTime game_time)
         {
-            if (Input.WasKeyPressed(Microsoft.Xna.Framework.Input.Keys.R) || is_reset)
+            if (/*Input.WasKeyPressed(Microsoft.Xna.Framework.Input.Keys.R) ||*/ is_reset)
             {
                 Character.ResetNextID();
                 world = new World(graphics_device, window);
                 user_interface = new UserInterface(world.PlayerCharacter);
                 is_reset = false;
+            }
+
+            if (Input.WasKeyPressed(Microsoft.Xna.Framework.Input.Keys.G))
+            {
+                EntityManager.PassUnit(new NPC(new Scout(world.PlayerCharacter.Position + new Vector2(100, 100), UnitFaction.Biomantes), EntityManager.Units, 5));
             }
 
             world.Update(game_time);
@@ -118,14 +124,14 @@ namespace EndlessSpace
 
             ImGui.Text("Unit Information");
 
-            foreach (var unit in EntityManager.UnitList)
+            foreach (var unit in EntityManager.Units)
             {
-                if (unit == null) return;
+                if (unit == null || unit.HasKeyword("asteroid")) return;
                 ImGui.Separator();
                 var character = unit as Character;
                 ImGui.Text($"Name: {unit.Name}, ID: {character?.ID}, Level: {unit.Level}");
                 ImGui.Text("");
-                ImGui.Text($"Faction: {unit.Faction}");
+                ImGui.Text($"Faction: {unit.Faction}, IsBoss: {(unit as NPC)?.IsBoss}");
                 ImGui.Text($"IsPlayerTeammate: {character?.IsPlayerTeammate}");
                 ImGui.Text($"IsDead: {unit.IsDead} IsDestroyed: {unit.IsDestroyed}");
                 ImGui.Text($"X: {unit.Position.X}, Y: {unit.Position.Y}");
@@ -140,10 +146,30 @@ namespace EndlessSpace
                 ImGui.Text($"SpeedMult: {unit.GetUnitValue(UnitValue.SpeedMult)}");
                 ImGui.Text("");
 
+                if (unit.Keywords.Count > 0)
+                {
+                    ImGui.Text("Keywords:");
+                    foreach (var keyword in unit.Keywords)
+                    {
+                        ImGui.Text($"{keyword}");
+                    }
+                    ImGui.Text("");
+                }
+
+                if (unit.Skills.Count > 0)
+                {
+                    ImGui.Text("Skills:");
+                    foreach (var skill in unit.Skills)
+                    {
+                        ImGui.Text($"{skill.Name}, Tag: {skill.Tags.FirstOrDefault()}");
+                    }
+                    ImGui.Text("");
+                }
+
                 if (unit.EffectTarget.ActiveEffects.Count > 0)
                 {
                     ImGui.Text("Active Effects:");
-                    foreach (UnitEffect effect in unit.EffectTarget.ActiveEffects)
+                    foreach (var effect in unit.EffectTarget.ActiveEffects)
                     {
                         ImGui.Text($"{effect.Name}");
                     }

@@ -29,6 +29,8 @@ namespace EndlessSpace
 
             values_increase = new float[] { 0.75f, 0.01f, 0.01f, 0.0035f, 0.15f, 0.05f, 0.005f };
 
+            projectile = (owner, target) => new Pulsator(owner.Position, owner, (Unit)target);
+
             switch (faction)
             {
                 case UnitFaction.Biomantes:

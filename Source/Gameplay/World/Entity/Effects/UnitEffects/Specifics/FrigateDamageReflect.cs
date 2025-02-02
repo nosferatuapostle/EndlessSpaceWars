@@ -12,6 +12,8 @@ namespace EndlessSpace
             total_magnitude = 0f;
             previous_level = source.Level;
 
+            total_magnitude += base_magnitude * source.Level;
+
             source.Event.on_attacked += ReflectDamage;
         }
 
@@ -36,13 +38,13 @@ namespace EndlessSpace
             }
         }
 
-        protected override void OnLevelChanged()
+        protected override void OnLevelUp()
         {
             float level_difference = player.Level - previous_level;
 
             if (level_difference != 0)
             {
-                float magnitude_calc = base_magnitude * Math.Abs(level_difference);
+                float magnitude_calc = base_magnitude * MathF.Abs(level_difference);
 
                 if (level_difference > 0)
                 {
@@ -57,14 +59,10 @@ namespace EndlessSpace
             }
         }
 
-        protected override void ApplyEffect()
-        {
-            total_magnitude += base_magnitude * source.Level;
-        }
-
         public override void OnEffectEnd()
         {
             total_magnitude = 0f;
+            source.Event.on_attacked -= ReflectDamage;
             base.OnEffectEnd();
         }
     }

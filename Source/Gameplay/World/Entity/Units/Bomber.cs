@@ -29,6 +29,8 @@ namespace EndlessSpace
 
             values_increase = new float[] { 0.62f, 0.01f, 0.01f, 0.005f, 0.2f, 0.03f, 0.004f };
 
+            projectile = (owner, target) => new IronBomb(owner.Position, owner, (Unit)target);
+
             switch (faction)
             {
                 case UnitFaction.Biomantes:

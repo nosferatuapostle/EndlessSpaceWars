@@ -11,9 +11,8 @@ namespace EndlessSpace
     struct Shader
     {
         public static Effect Throb { get; set; }
-        public static Effect Grayscale { get; set; }
+        public static Effect GrayScale { get; set; }
         public static Effect Outline { get; set; }
-        public static Effect OutlineTransparent { get; set; }
     }
 
     struct Particle

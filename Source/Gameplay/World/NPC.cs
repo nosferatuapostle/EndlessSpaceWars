@@ -9,7 +9,7 @@ namespace EndlessSpace
     public class NPC : Character
     {
         public const float RADIUS = 480f;
-        
+
         AI AI;
         List<Unit> unit_list;
 
@@ -66,20 +66,19 @@ namespace EndlessSpace
 
         public override void Attack(Unit target, float delta_time)
         {
-            if (target == null || target.IsDead) return;
+            if (target == null || target.IsDead || target.HasKeyword("invisible")) return;
 
-            Vector2 direction_to_target = target.Position - Position;
-            float distance_to_target = direction_to_target.Length();
-
-            if (distance_to_target > 0)
+            float radius = MathF.Sqrt(target.Size.X * target.Size.X + target.Size.Y * target.Size.Y) / 2f;
+            Vector2 direction = target.Position - Position;
+            float distance = direction.Length() - radius;
+            if (distance > 0)
             {
-                direction_to_target /= distance_to_target;
-                direction_to_target = AI.AdjustDirection(direction_to_target, delta_time) * distance_to_target;
+                direction /= distance;
+                direction = AI.AdjustDirection(direction) * AI.DIRECTION_MULT;
             }
-
-            if (weapon.Range < distance_to_target)
+            if (weapon.Range < distance)
             {
-                Vector2 adjusted_position = Position + direction_to_target;
+                Vector2 adjusted_position = Position + direction;
                 MoveTo(adjusted_position);
             }
             else

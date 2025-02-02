@@ -11,30 +11,35 @@ using MonoGame.Extended.Particles.Modifiers.Interpolators;
 
 namespace EndlessSpace
 {
-    public class Unit : AnimatedObject, ICollisionActor, IUnitValueOwner
+    public class Unit : AnimatedObject, ICollisionActor, IUnitValueOwner, IKeywordObject
     {
         const float CRITICAL_MULTIPLIER = 2.0f;
 
         public bool is_selected;
 
         int level;
+        protected float radius;
 
+        Movement movement;
+        KeywordObject keyword_object;
         protected AnimatedEngine engine;
+        protected Func<Unit, object, Projectile> projectile;
+        protected EffectTarget effect_target;
         protected Weapon weapon;
-        protected List<Skill> skill_list = new List<Skill>();
+        protected List<Skill> skill_list;
 
         UnitEvent unit_event;
         protected UnitInfo info;
         protected float[] values_increase;
         protected Dictionary<UnitValue, UnitValueInfo> base_values;
 
-        Movable movement;
-        protected EffectTarget effect_target;
-
         public Unit(string[] path, Vector2 position, Vector2 size, UnitFaction faction, List<Unit> unit_list) : base(path, position, size)
         {
             level = 1;
             unit_event = new UnitEvent();
+
+            Vector2 scaled_size = Size * Scale;
+            radius = MathF.Sqrt(scaled_size.X * scaled_size.X + scaled_size.Y * scaled_size.Y) / 4f;
 
             base_values = new Dictionary<UnitValue, UnitValueInfo>
             {
@@ -52,12 +57,14 @@ namespace EndlessSpace
             Faction = faction;
 
             if (unit_list != null) info = new UnitInfo(this, unit_list);
-            
-            movement = new Movable(this);
-            weapon = new Weapon(this, (owner, target) => new LightningBoltProj(owner.Position, owner, (Unit)target));
-            effect_target = new EffectTarget(this);
 
-            unit_event.on_death += OnDeath;
+            keyword_object = new KeywordObject();
+
+            movement = new Movement(this);
+            projectile = (owner, target) => new LightningBoltProj(owner.Position, owner, (Unit)target);
+            effect_target = new EffectTarget(this);
+            weapon = new Weapon(this, projectile);
+            skill_list = new List<Skill>();
         }
 
         public UnitEvent Event => unit_event;
@@ -69,8 +76,14 @@ namespace EndlessSpace
         public AnimatedEngine Engine => engine;
         public EffectTarget EffectTarget => effect_target;
 
-        public Weapon Weap => weapon;
-        public List<Skill> SkillList => skill_list;
+        public List<string> Keywords => keyword_object.keyword_list;
+        public void AddKeyword(string keyword) => keyword_object.AddKeyword(keyword);
+        public void RemoveKeyword(string keyword) => keyword_object.RemoveKeyword(keyword);
+        public bool HasKeyword(string keyword) => keyword_object.HasKeyword(keyword);
+        public bool HasKeyword(string[] keywords) => keyword_object.HasKeyword(keywords);
+
+        public Func<Unit, object, Projectile> Projectile => projectile;
+        public List<Skill> Skills => skill_list;
 
         public int Level
         {
@@ -81,14 +94,20 @@ namespace EndlessSpace
             }
         }
 
+        public float Radius => radius;
+
         public string Name { get; protected set; } = "None";
         public UnitFaction Faction { get; protected set; } = UnitFaction.None;
 
         public Unit Target => weapon.Target;
         public virtual void Attack(Unit target, float delta_time)
         {
-            if (target == null || target.IsDead) return;
-            if (weapon.Range < Vector2.Distance(Position, target.Position))
+            if (target == null || target.IsDead || target.HasKeyword("invisible")) return;
+
+            float radius = MathF.Sqrt(target.Size.X * target.Size.X + target.Size.Y * target.Size.Y) / 2f;
+            Vector2 direction = target.Position - Position;
+            float distance = direction.Length() - radius;
+            if (weapon.Range < distance)
             {
                 MoveTo(target.Position);
             }
@@ -150,16 +169,16 @@ namespace EndlessSpace
         {
             if (collision_info.Other is Unit unit)
             {
+                Vector2 scaled = unit.Size * unit.Scale;
                 float distance = Vector2.Distance(Position, unit.Position);
-                float radius = (unit is Character asteroid && asteroid.type is Asteroid) ? (unit.Size * unit.Scale).X / 4f : unit.Bounds.BoundingRectangle.Width / 4f;
+                float radius = MathF.Sqrt(scaled.X * scaled.X + scaled.Y * scaled.Y) / 4f;
 
                 if (distance == 0f)
                 {
                     Position += new Vector2(0.1f, 0.1f);
                 }
-                else if (unit is Character character && character.IsSpaceStation && !(this as Character).IsSpaceStation)
+                else if (unit.HasKeyword("space_station") && this != unit)
                 {
-                    Vector2 scaled = unit.Size * unit.Scale;
                     RectangleF unit_rectangle = new RectangleF(unit.Position - scaled / 2f, scaled);
 
                     if (Position.X > unit_rectangle.Left && Position.X < unit_rectangle.Right && Position.Y > unit_rectangle.Top && Position.Y < unit_rectangle.Bottom)
@@ -211,11 +230,12 @@ namespace EndlessSpace
             RestoreUnitValue(UnitValue.Health, -final_damage);
 
             if (GetUnitValue(UnitValue.Health) <= 0)
-                Event.OnDeath(this, source);
+                OnDeath(this, source);
         }
 
         protected virtual void OnDeath(Unit dying, Unit killer)
         {
+            unit_event.OnDeath(dying, killer);
             SetAnimation("death");
             if (killer is PlayerCharacter player && !dying.IsDead && dying != player)
             {
@@ -226,15 +246,17 @@ namespace EndlessSpace
 
         protected void AddKillReward(PlayerCharacter player, Unit dying)
         {
+            if (dying is NPC npc && npc.IsPlayerTeammate) return;
             player.Experience.AddExp(MathF.Max(1f, dying.Level * (dying.Level / player.Level)));
             return;
-            if (dying is NPC npc && npc.IsBoss)
+            /*if (dying is NPC npc && npc.IsBoss)
             {
-            }
+            }*/
         }
 
         public virtual void Kill()
         {
+            OnDeath(this, this);
             SetAnimation("death");
             IsDead = true;
         }

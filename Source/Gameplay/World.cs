@@ -28,7 +28,7 @@ namespace EndlessSpace
             camera = new OrthographicCamera(viewport_adapter);
             camera_controller = new CameraController();
 
-            collision_component = new CollisionComponent(new Layer(new SpatialHash(new Vector2(120, 120))));
+            collision_component = new CollisionComponent(new Layer(new SpatialHash(new Vector2(1024, 1024))));
 
             entity_manager = new EntityManager(this, collision_component);
             EntityManager.PassProjectile = entity_manager.AddProjectile;
@@ -39,17 +39,10 @@ namespace EndlessSpace
             EffectManager.PassLightning = effect_manager.AddLightning;
 
             Vector2 position = new Vector2(graphics_device.Viewport.Width / 2, graphics_device.Viewport.Height / 2);
-            player = new PlayerCharacter(new Scout(position, UnitFaction.IronCorpse), entity_manager.UnitList);
+            player = new PlayerCharacter(new Scout(position, UnitFaction.Biomantes), entity_manager.Units);
             EntityManager.PassUnit(player);
 
-            encounter_zone = new EncounterZone(player, entity_manager.UnitList);
-
-            NPC station = new NPC(new SpaceStation(pos + new Vector2(1200f, 0f), UnitFaction.IronCorpse), entity_manager.UnitList, 1);
-            station.SetBehavior(Behavior.None);
-            NPC asteroid = new NPC(new Asteroid(pos + new Vector2(1600f, 0f)), entity_manager.UnitList, 1);
-            asteroid.SetBehavior(Behavior.None);
-            EntityManager.PassUnit(station);
-            EntityManager.PassUnit(asteroid);
+            encounter_zone = new EncounterZone(player, entity_manager.Units);
         }
 
         public static OrthographicCamera Camera => camera;
@@ -59,7 +52,7 @@ namespace EndlessSpace
         bool camera_to_player = false;
         public void Update(GameTime game_time)
         {
-            EntityManager.UnitsCount = entity_manager.UnitList.Count;
+            EntityManager.UnitsCount = entity_manager.Units.Count;
 
             if (Input.WasKeyPressed(Keys.Space))
             {
@@ -98,8 +91,7 @@ namespace EndlessSpace
             effect_manager.Draw(sprite_batch);
             sprite_batch.End();
 
-            sprite_batch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicWrap, transformMatrix: transform/*, effect: Shader.AntiAliasing*/);
-            
+            sprite_batch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicWrap, transformMatrix: transform);
             entity_manager.DrawUnit(sprite_batch);
             sprite_batch.End();
 

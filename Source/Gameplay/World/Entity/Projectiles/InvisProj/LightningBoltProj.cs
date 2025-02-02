@@ -12,7 +12,6 @@ namespace EndlessSpace
             Name = "Lightning Bolt";
             damage = 1f;
             speed = 0f;
-            tick_time = new CountdownTimer(0.01f);
 
             Range = 300f;
             Cooldown = new CountdownTimer(1f);
@@ -23,13 +22,9 @@ namespace EndlessSpace
                 EffectManager.PassLightning(lightning_bolt);
                 Position = target.Position;
             }
-
         }
 
-        protected override void OnHit(Unit target, Color color)
-        {
-            base.OnHit(target, Color.White);
-        }
+        protected override bool HitCondition(Unit unit) => unit != owner && !unit.IsDead;
 
         public override void ProjPosition(GameTime game_time) { }
     }

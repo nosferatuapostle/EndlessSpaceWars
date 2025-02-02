@@ -19,10 +19,10 @@ namespace EndlessSpace
             total_count = 0;
             this.unit_list = unit_list;
 
-            resurrection_time = new CountdownTimer(2f);
+            resurrection_time = new CountdownTimer(5f);
         }
 
-        protected override void OnLevelChanged()
+        protected override void OnLevelUp()
         {
             ApplyEffect();
         }
@@ -48,36 +48,9 @@ namespace EndlessSpace
                 total_count--;
             }
 
-            unit = CommandedNPC();
+            unit = GameGlobals.CommandedNPC(source, unit_list);
             EntityManager.PassUnit(unit);
             total_count++;
-        }
-
-        private NPC CommandedNPC()
-        {
-            float distance = source.Size.X;
-            float rotation = source.Rotation;
-
-            float x_offset = distance * MathF.Cos(rotation - MathF.PI / 2f);
-            float y_offset = distance * MathF.Sin(rotation - MathF.PI / 2f);
-
-            Vector2 position = source.Position + new Vector2(x_offset, y_offset);
-
-            switch (source.Level)
-            {
-                case 1:
-                    return new NPC(new Scout(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
-                case 2:
-                    return new NPC(new Fighter(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
-                case 3:
-                    return new NPC(new Frigate(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
-                case 4:
-                    return new NPC(new Torpedo(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
-                case 5:
-                    return new NPC(new Support(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
-                default:
-                    return new NPC(new Scout(source.Position + new Vector2(x_offset, y_offset), source.Faction), unit_list, source.Level, source);
-            }
         }
     }
 }

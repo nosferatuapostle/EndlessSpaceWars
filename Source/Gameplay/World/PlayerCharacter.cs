@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 
@@ -17,8 +16,6 @@ namespace EndlessSpace
             controller = new PlayerController(this, unit_list);
 
             experience = new Experience(this);
-
-            UpdateStats();
 
             skill_list.Add(new Heal(this));
             skill_list.Add(new Blink(this));

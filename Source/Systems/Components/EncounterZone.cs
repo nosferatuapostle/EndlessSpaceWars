@@ -9,7 +9,7 @@ namespace EndlessSpace
 {
     public class EncounterZone
     {
-        const int NPC_COUNT = 200;
+        const int NPC_COUNT = 100;
 
         PlayerCharacter player;
         List<Unit> unit_list;
@@ -22,7 +22,7 @@ namespace EndlessSpace
         {
             this.player = player;
             this.unit_list = unit_list;
-            timer = new CountdownTimer(1f);
+            timer = new CountdownTimer(0.25f);
             offset = new Vector2(Globals.Random.Next((int)NPC.RADIUS / 2, (int)NPC.RADIUS), 0);
             factions = new[] { UnitFaction.Biomantes, UnitFaction.DuskFleet, UnitFaction.IronCorpse };
             asteroid_ids = new HashSet<ulong>();
@@ -31,7 +31,7 @@ namespace EndlessSpace
 
             var camera_bounds = World.Camera.BoundingRectangle;
             var spawn_margin = 50f;
-            for (int i = 0; i < Globals.Random.Next(4, 11); i++)
+            for (int i = 0; i < Globals.Random.Next(11, 26); i++)
             {
                 float x = Globals.Random.NextSingle(camera_bounds.Left + spawn_margin, camera_bounds.Right - spawn_margin);
                 float y = Globals.Random.NextSingle(camera_bounds.Top + spawn_margin, camera_bounds.Bottom - spawn_margin);
@@ -49,7 +49,7 @@ namespace EndlessSpace
 
         private void SpawnAsteroid()
         {
-            if (asteroid_ids.Count > NPC_COUNT/4f)
+            if (asteroid_ids.Count > NPC_COUNT/2f)
             {
                 foreach (var id in asteroid_ids)
                 {
@@ -73,24 +73,28 @@ namespace EndlessSpace
 
         public NPC RandomUnit(UnitFaction faction, Vector2 position, int level, Unit owner = null, bool index_only = false, params int[] index_arr)
         {
-            var units = new NPC[]
+            var unit_types = new Unit[]
             {
-                new NPC(new Battlecruiser(position, faction), unit_list, level, owner),
-                new NPC(new Bomber(position, faction), unit_list, level, owner),
-                new NPC(new Dreadnought(position, faction), unit_list, level, owner),
-                new NPC(new Fighter(position, faction), unit_list, level, owner),
-                new NPC(new Frigate(position, faction), unit_list, level, owner),
-                new NPC(new Scout(position, faction), unit_list, level, owner),
-                new NPC(new Support(position, faction), unit_list, level, owner),
-                new NPC(new Torpedo(position, faction), unit_list, level, owner)
+                new Battlecruiser(position, faction),
+                new Bomber(position, faction),
+                new Dreadnought(position, faction),
+                new Fighter(position, faction),
+                new Frigate(position, faction),
+                new Scout(position, faction),
+                new Support(position, faction),
+                new Torpedo(position, faction)
             };
 
             var filtered_units = index_only
-                ? units.Where((unit, idx) => index_arr.Contains(idx)).ToArray()
-                : units.Where((unit, idx) => !index_arr.Contains(idx)).ToArray();
+                ? unit_types.Where((_, idx) => index_arr.Contains(idx)).ToArray()
+                : unit_types.Where((_, idx) => !index_arr.Contains(idx)).ToArray();
 
-            return filtered_units.Length == 0 ? null : filtered_units[Globals.Random.Next(filtered_units.Length)];
+            if (filtered_units.Length == 0) return null;
+
+            var selected_unit = filtered_units[Globals.Random.Next(filtered_units.Length)];
+            return new NPC(selected_unit, unit_list, level, owner);
         }
+
 
         public void Update(GameTime game_time)
         {
@@ -98,7 +102,7 @@ namespace EndlessSpace
             SpawnAsteroid();
             if (timer.State == TimerState.Completed && EntityManager.UnitsCount <= NPC_COUNT)
             {
-                //HandleEncounter();
+                HandleEncounter();
                 //SoloUnit();
                 //FactionClash();
                 //SpaceStation(Position());
@@ -124,13 +128,16 @@ namespace EndlessSpace
             int min = level - 13;
             int max = level + 25;
 
-            while (min < 1)
+            if (min < 1)
             {
-                min++;
-                max--;
+                int diff = 1 - min;
+                min += diff;
+                max -= diff;
             }
+
             return Globals.Random.Next(min, max);
         }
+
 
         private void SoloUnit()
         {
@@ -193,7 +200,7 @@ namespace EndlessSpace
             UnitFaction faction = RandomFaction();
 
             NPC space_station = new NPC(new SpaceStation(position, faction), unit_list, CalcLevel());
-            space_station.SetBehavior(Behavior.None);
+            space_station.SetBehavior(Behavior.Objective);
 
             int count = Globals.Random.Next(3, 7);
 

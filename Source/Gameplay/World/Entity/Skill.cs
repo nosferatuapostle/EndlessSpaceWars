@@ -1,34 +1,59 @@
 ﻿using Microsoft.Xna.Framework;
+using MonoGame.Extended.Timers;
+using System.Collections.Generic;
 
 namespace EndlessSpace
 {
     public abstract class Skill
     {
-        protected Unit owner;
+        public enum Tag
+        {
+            None,
+            Escape,
+            Attack,
+            PowerUp,
+            Heal
+        }
 
-        public Skill(string name, Unit owner)
+        KeywordObject keyword_object;
+
+        protected Unit owner;
+        CountdownTimer cooldown;
+        float time;
+
+        public Skill(string name, Tag tag, Unit owner, float time)
         {
             Name = name;
             this.owner = owner;
+            this.time = time;
+
+            cooldown = new CountdownTimer(time);
+            cooldown.Stop();
+
+            keyword_object = new KeywordObject();
+            keyword_object.AddKeyword(tag.ToString());
         }
 
         public string Name { get; private set; }
-        public bool Active { get; set; } = false;
+        public bool IsReady => cooldown.State == TimerState.Completed || cooldown.State == TimerState.Stopped;
 
-        public virtual void Update()
+        public List<string> Tags => keyword_object.keyword_list;
+        public bool HasTag(Tag tag) => keyword_object.HasKeyword(tag.ToString());
+
+        public virtual void Update(GameTime game_time)
         {
-            if (Active)
+            cooldown.Update(game_time);
+        }
+
+        public void Activate()
+        {
+            if (IsReady)
             {
                 Use();
-                Reset();
+                cooldown.Restart();
             }
         }
 
         protected abstract void Use();
-
-        protected virtual void Reset()
-        {
-            Active = false;
-        }
     }
 }

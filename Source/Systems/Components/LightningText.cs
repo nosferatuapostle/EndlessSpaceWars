@@ -51,7 +51,7 @@ namespace EndlessSpace
             {
                 float x = particle.X / 500f;
 
-                int boltChance = (int)(20 * Math.Sin(3 * hue * MathHelper.Pi - x + 1 * GetNoise(hue + x)) + 52);
+                int boltChance = (int)(20 * MathF.Sin(3 * hue * MathHelper.Pi - x + 1 * GetNoise(hue + x)) + 52);
 
                 if (rand.Next(boltChance) == 0)
                 {

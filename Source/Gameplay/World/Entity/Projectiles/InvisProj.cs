@@ -1,46 +1,21 @@
 ﻿using Microsoft.Xna.Framework;
-using MonoGame.Extended;
-using MonoGame.Extended.Collisions;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Timers;
 
 namespace EndlessSpace
 {
     public class InvisProj : Projectile
     {
-        protected bool periodic;
-        protected CountdownTimer tick_time;
+        public readonly float time;
 
-        public InvisProj(Vector2 position, Vector2 size, Unit owner, object target) : base(null, position, size, owner, target)
+        public InvisProj(Vector2 position, Vector2 size, Unit owner, object target, float time = 0.2f) : base(null, position, size, owner, target)
         {
-            periodic = false;
-            tick_time = new CountdownTimer(0.1f);
-
-            Bounds = new CircleF(position, size.X / 2.5f);
+            this.time = time;
+            life_time = new CountdownTimer(time);
         }
 
-        public override void OnCollision(CollisionEventArgs collisionInfo)
-        {
-            if (tick_time.State == TimerState.Completed)
-            {
-                if (periodic)
-                {
-                    if (collisionInfo.Other is Unit unit && unit != owner)
-                    {
-                        tick_time.Restart();
-                        unit.GetDamage(owner, damage);
-                    }
-                }
-                else
-                {
-                    base.OnCollision(collisionInfo);
-                }
-            }
-        }
+        protected override bool HitCondition(Unit unit) => !unit.IsDead && unit.HostileTo(owner);
 
-        public override void Update(GameTime game_time)
-        {
-            tick_time.Update(game_time);
-            base.Update(game_time);
-        }
+        public override void Draw(SpriteBatch sprite_batch) { }
     }
 }

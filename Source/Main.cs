@@ -46,9 +46,8 @@ namespace EndlessSpace
             ParticleData.Load(GraphicsDevice);
 
             Shader.Throb = Content.Load<Effect>("Shaders\\Throb");
-            Shader.Grayscale = Content.Load<Effect>("Shaders\\Grayscale");
+            Shader.GrayScale = Content.Load<Effect>("Shaders\\Grayscale");
             Shader.Outline = Content.Load<Effect>("Shaders\\Outline");
-            Shader.OutlineTransparent = Content.Load<Effect>("Shaders\\OutlineTransparent");
 
             game_manager = new GameManager(this, GraphicsDevice, Window);
         }

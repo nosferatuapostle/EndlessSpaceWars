@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using System;
 
 namespace EndlessSpace
 {
@@ -28,14 +29,15 @@ namespace EndlessSpace
 
             source_rectangle = null;
 
-            Bounds = new CircleF(position, size.X);
-
             Transform = new Transform2
             {
                 Position = position,
                 Rotation = rot,
                 Scale = scale
             };
+            
+            float radius = (float)Math.Sqrt(size.X * size.X + size.Y * size.Y);
+            Bounds = new CircleF(position, radius/2f);
         }
 
         public Transform2 Transform { get; private set; }

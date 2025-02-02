@@ -16,7 +16,8 @@ namespace EndlessSpace
         Aggressive,
         Commanded,
         Group,
-        Defense
+        Defense,
+        Objective
     }
 
     public class AI
@@ -34,7 +35,7 @@ namespace EndlessSpace
             Patrol
         }
 
-        const float DIRECTION_MULT = 32f;
+        public const float DIRECTION_MULT = 32f;
         const float MIN_DISTANCE = 20f;
         const float MAX_DISTANCE = 1624f;
         const float COMMANDED_UNIT_DISTANCE = 256f;
@@ -51,15 +52,17 @@ namespace EndlessSpace
         
         State state;
         Behavior behavior;
+        public Behavior Behavior => behavior;
 
         public Unit owner;
         public HashSet<Unit> target_list;
-        
+
         public Unit current_target => target_list
-        .Where(unit => unit != owner && unit != npc && !unit.IsDead)
-        .OrderBy(unit => unit == owner?.Target)
-        .OrderBy(unit => Vector2.Distance(unit.Position, npc.Position))
-        .FirstOrDefault();
+            .Where(unit => unit != owner && unit != npc && !unit.IsDead)
+            .OrderBy(unit => unit.HasKeyword("invisible") ? 1 : 0)
+            .ThenBy(unit => unit == owner?.Target ? 0 : 1)
+            .ThenBy(unit => Vector2.Distance(unit.Position, npc.Position))
+            .FirstOrDefault();
 
         public AI(NPC npc, Unit owner)
         {
@@ -118,12 +121,12 @@ namespace EndlessSpace
 
             foreach (var unit in npc.detected_units)
             {
-                if ((unit is Character character && character.type is Asteroid) || unit.Faction == UnitFaction.Summoned) continue;
+                if (GameGlobals.UnAttackable(unit) || unit.HasKeyword("asteroid")) continue;
                 if (owner != null && (unit.HostileTo(owner) || owner.HostileTo(unit)))
                 {
                     target_list.Add(unit);
                     return;
-                } 
+                }
                 else if (owner == null && unit.HostileTo(npc)) target_list.Add(unit);
             }
         }
@@ -141,7 +144,7 @@ namespace EndlessSpace
                         behavior = Behavior.Commanded;
                         owner.Event.on_attacked += OnAttacked;
                     }
-                    else if (current_target != null && !current_target.IsDead)
+                    else if (current_target != null && !current_target.IsDead && !current_target.HasKeyword("invisible"))
                     {
                         state = State.Attacking;
                     }
@@ -174,7 +177,7 @@ namespace EndlessSpace
                 case Behavior.Group:
                     if (owner == null || owner.IsDead)
                     {
-                        owner.Event.on_attacked -= OnAttacked;
+                        if (owner != null) owner.Event.on_attacked -= OnAttacked;
                         behavior = Behavior.Default;
                     }
                     else
@@ -205,7 +208,7 @@ namespace EndlessSpace
             if (prev_state == State.Moving)
             {
                 float current_value = npc.GetBaseUnitValue(UnitValue.SpeedMult);
-                npc.SetBaseUnitValue(UnitValue.SpeedMult, Math.Max(0, current_value + speed_mult));
+                npc.SetBaseUnitValue(UnitValue.SpeedMult, MathF.Max(0, current_value + speed_mult));
                 speed_mult = 0;
             }
 
@@ -213,14 +216,14 @@ namespace EndlessSpace
             {
                 float current_value = npc.GetBaseUnitValue(UnitValue.SpeedMult);
                 speed_mult = current_value * 0.5f;
-                npc.SetBaseUnitValue(UnitValue.SpeedMult, Math.Max(0, current_value - speed_mult));
+                npc.SetBaseUnitValue(UnitValue.SpeedMult, MathF.Max(0, current_value - speed_mult));
             }
         }
 
         private void CommandedLogic()
         {
             var target = current_target;
-            if (target != null && !target.IsDead && commanded_is_ready && Vector2.Distance(npc.Position, owner.Position) < COMMANDED_UNIT_DISTANCE + NPC.RADIUS)
+            if (target != null && !target.IsDead && !current_target.HasKeyword("invisible") && commanded_is_ready && Vector2.Distance(npc.Position, owner.Position) < COMMANDED_UNIT_DISTANCE + NPC.RADIUS)
             {
                 target_list.Add(target);
                 state = State.Attacking;
@@ -267,24 +270,50 @@ namespace EndlessSpace
         public void Update(float delta_time)
         {
             if (behavior == Behavior.None) return;
+            if (behavior == Behavior.Objective) goto skip;
             if (player == null && npc.PlayerCharacter != null && !npc.PlayerCharacter.IsDead)
             {
                 player = npc.PlayerCharacter;
                 Vector2 to_player = player.Position - npc.Position;
                 to_player.Normalize();
 
-                direction = Math.Abs(to_player.X) > Math.Abs(to_player.Y) ? new Vector2(Math.Sign(to_player.X), 0) * DIRECTION_MULT : new Vector2(0, Math.Sign(to_player.Y)) * DIRECTION_MULT;
+                direction = MathF.Abs(to_player.X) > MathF.Abs(to_player.Y) ? new Vector2(MathF.Sign(to_player.X), 0) * DIRECTION_MULT : new Vector2(0, MathF.Sign(to_player.Y)) * DIRECTION_MULT;
             }
             RefreshTarget();
             UpdateState();
             ExecuteState(delta_time);
+            skip:
+            SkillCastLogic();
+        }
+
+        private void SkillCastLogic()
+        {
+            if (current_target == null || npc.Faction == UnitFaction.Summoned) return;
+            
+            if (behavior == Behavior.Fearful)
+            {
+                npc.current_skill = npc.Skills.FirstOrDefault(skill => skill.HasTag(Skill.Tag.Escape) && skill.IsReady);
+                npc.used_skills.Add(npc.current_skill);
+            }
+            else
+            {
+                npc.current_skill = npc.Skills.FirstOrDefault(skill => skill.HasTag(Skill.Tag.Attack) && skill.IsReady);
+                npc.used_skills.Add(npc.current_skill);
+            }
+            if (npc.GetUnitValue(UnitValue.Health) < npc.GetBaseUnitValue(UnitValue.Health) / 2f)
+            {
+                npc.current_skill = npc.Skills.FirstOrDefault(skill => (skill.HasTag(Skill.Tag.PowerUp) || skill.HasTag(Skill.Tag.Heal)) && skill.IsReady);
+                if (npc.Faction == UnitFaction.Biomantes && npc.current_skill == null) npc.current_skill = npc.Skills.FirstOrDefault(skill => skill != null && skill is BiomantesInvisability && skill.IsReady);
+                npc.used_skills.Add(npc.current_skill);
+            }
+
+            npc.current_skill?.Activate();
         }
 
         private void Patrol(float delta_time)
         {
             List<Unit> group = owner is NPC owner_npc ? owner_npc.group.ToList() : null;
-            if (group == null || group.Count == 0)
-                return;
+            if (group == null || group.Count == 0) return;
 
             float group_spacing = owner.Size.X * 2f;
             int total_units = group.Count;
@@ -297,31 +326,34 @@ namespace EndlessSpace
             float target_angle = angle_step * index;
 
             Vector2 patrol_position = owner.Position + new Vector2(
-                (float)Math.Cos(target_angle) * group_spacing,
-                (float)Math.Sin(target_angle) * group_spacing
+                MathF.Cos(target_angle) * group_spacing,
+                MathF.Sin(target_angle) * group_spacing
             );
 
-            Vector2 to_target = patrol_position - npc.Position;
-            Vector2 adjusted_direction = AdjustDirection(to_target, delta_time);
-            Vector2 adjusted_position = npc.Position + adjusted_direction * DIRECTION_MULT * delta_time;
+            Vector2 direction = patrol_position - npc.Position;
+            Vector2 adjusted_direction = AdjustDirection(direction);
+            Vector2 adjusted_position = npc.Position + adjusted_direction * DIRECTION_MULT;
 
-            float distance_to_target = Vector2.Distance(npc.Position, adjusted_position);
+            float distance = (adjusted_position - npc.Position).Length();
 
-            if (distance_to_target > MIN_DISTANCE)
+            if (distance > MIN_DISTANCE)
             {
                 npc.MoveTo(adjusted_position);
             }
             else
             {
+                patrol_position += adjusted_direction * npc.Size.X * 0.5f;
+                npc.MoveTo(patrol_position);
                 commanded_is_ready = true;
                 npc.MoveStop();
             }
         }
 
+
         private void Escape(float delta_time)
         {
             Vector2 escape_direction = npc.Position - current_target.Position;
-            Vector2 adjusted_escape_direction = AdjustDirection(escape_direction, delta_time);
+            Vector2 adjusted_escape_direction = AdjustDirection(escape_direction);
             Vector2 escape_position = npc.Position + adjusted_escape_direction * DIRECTION_MULT;
 
             npc.MoveTo(escape_position);
@@ -329,8 +361,8 @@ namespace EndlessSpace
 
         private void Moving(float delta_time)
         {
-            Vector2 adjusted_direction = AdjustDirection(direction, delta_time);
-            Vector2 target_position = npc.Position + adjusted_direction;
+            Vector2 adjusted_direction = AdjustDirection(direction);
+            Vector2 target_position = npc.Position + adjusted_direction * DIRECTION_MULT;
             npc.MoveTo(target_position);
         }
 
@@ -393,22 +425,22 @@ namespace EndlessSpace
             }
         }
 
-        public Vector2 AdjustDirection(Vector2 original_direction, float delta_time)
+        public Vector2 AdjustDirection(Vector2 original_direction)
         {
             Vector2 adjusted_direction = original_direction;
 
             foreach (var other_unit in npc.detected_units)
             {
-                Vector2 to_other_unit = (other_unit.Position + Vector2.Zero * delta_time) - npc.Position;
+                Vector2 to_other_unit = (other_unit.Position + Vector2.Zero) - npc.Position;
                 float distance = to_other_unit.Length();
 
                 const float NOUN = 0.75f;
-                float offset = other_unit.Size.X * 2f;
+                float offset = MathF.Sqrt(other_unit.Size.X * other_unit.Size.X + other_unit.Size.Y * other_unit.Size.Y) / 2f;
 
                 if (distance < offset && Vector2.Dot(original_direction, to_other_unit) > 0.1f)
                 {
                     Vector2 avoidance_vector = new Vector2(-to_other_unit.Y, to_other_unit.X);
-                    float avoidance_strength = Math.Max(0, (offset - distance) / offset);
+                    float avoidance_strength = MathF.Max(0, (offset - distance) / offset);
 
                     if (Vector2.Dot(avoidance_vector, original_direction) > 0)
                     {

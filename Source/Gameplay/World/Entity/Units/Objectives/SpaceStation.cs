@@ -20,7 +20,7 @@ namespace EndlessSpace
                 { UnitValue.HealRate, new UnitValueInfo(UnitValue.HealRate, 1f, 2f) },
                 { UnitValue.CriticalChance, new UnitValueInfo(UnitValue.CriticalChance, 0f, 1f) },
                 { UnitValue.Magnitude, new UnitValueInfo(UnitValue.Magnitude, 1f) },
-                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 0.48f) },
+                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 1f) },
                 { UnitValue.SpeedMult, new UnitValueInfo(UnitValue.SpeedMult, 0f, 2f) }
             };
 

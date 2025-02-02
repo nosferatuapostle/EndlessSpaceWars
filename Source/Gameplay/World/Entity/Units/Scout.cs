@@ -29,6 +29,8 @@ namespace EndlessSpace
 
             values_increase = new float[] { 0.5f, 0.01f, 0.01f, 0.007f, 0.3f, 0.025f, 0.006f };
 
+            projectile = (owner, target) => new LightningBoltProj(owner.Position, owner, (Unit)target);
+
             switch (faction)
             {
                 case UnitFaction.Biomantes:

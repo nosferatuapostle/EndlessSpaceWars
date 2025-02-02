@@ -5,11 +5,15 @@ namespace EndlessSpace
 {
     public class VisualFX
     {
-        public bool is_throb = false;
+        public bool is_throb;
         public Color throb_color = Color.White;
         CountdownTimer throb_timer;
 
-        public VisualFX() => throb_timer = new CountdownTimer(0.5f);
+        public VisualFX()
+        {
+            is_throb = false;
+            throb_timer = new CountdownTimer(0.5f);
+        }
 
         public CountdownTimer ThrobTimer => throb_timer;
 

@@ -22,6 +22,8 @@ namespace EndlessSpace
 
             values_increase = new float[] { 0f, 0f, 0f, 0f, 0.25f, 0f, 0.01f };
 
+            projectile = (owner, target) => new Minigun(owner.Position, owner, (Unit)target);
+
             AddAnimation(0, "idle", 1);
             AddAnimation(0, "death", 1, false);
         }

@@ -47,12 +47,12 @@ namespace EndlessSpace
             health_bar = new HealthBar(unit);
 
             unit_size = unit.Size * unit.Scale;
-            position = new Vector2((float)Math.Round(unit.Position.X - unit_size.X / 2f), (float)Math.Round(unit.Position.Y - unit_size.X / 2f - 10f));
+            position = new Vector2(MathF.Round(unit.Position.X - unit_size.X / 2f), MathF.Round(unit.Position.Y - unit_size.X / 2f - 10f));
         }
 
         public void AddFloatingDamage(float damage, Color color)
         {
-            string damage_text = Math.Round(damage).ToString();
+            string damage_text = MathF.Round(damage).ToString();
             SizeF text_size = font.MeasureString(damage_text);
             Vector2 text_position = new Vector2(
                 unit.Position.X - text_size.Width / 2f,
@@ -104,7 +104,7 @@ namespace EndlessSpace
             float y = unit.Position.Y - 10f;
             if (unit.Faction == UnitFaction.Summoned)
                 y = unit.Position.Y - 32f;
-            target_position = new Vector2((float)Math.Round(unit.Position.X - text_size.Width / 2f), (float)Math.Round(y - unit_size.Y / 2f));
+            target_position = new Vector2(MathF.Round(unit.Position.X - text_size.Width / 2f), MathF.Round(y - unit_size.Y / 2f));
 
             position = target_position;
         }

@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Extended.ECS;
 using MonoGame.Extended.Timers;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,14 +9,13 @@ namespace EndlessSpace
     public class EffectTarget
     {
         Unit unit;
-
-        List<UnitEffect> unit_effects = new List<UnitEffect>();
-
+        List<UnitEffect> unit_effects;
         VisualFX visual;
 
         public EffectTarget(Unit unit)
         {
             this.unit = unit;
+            unit_effects = new List<UnitEffect>();
             visual = new VisualFX();
         }
 
@@ -51,6 +48,7 @@ namespace EndlessSpace
 
         public bool HasEffect<T>() where T : UnitEffect => unit_effects.Any(e => e is T);
         public bool HasEffect(string name) => unit_effects.Any(e => e.Name == name);
+        public bool HasEffect(ulong ID) => unit_effects.Any(e => e.ID == ID);
         public bool HasEffect(UnitEffect effect) => unit_effects.Contains(effect);
 
         public void ActivateThrob(Color color)

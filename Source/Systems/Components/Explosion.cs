@@ -18,7 +18,7 @@ namespace EndlessSpace
         }
 
         public bool IsComplited => duration <= 0;
-
+        
         public void Update(GameTime game_time)
         {
             duration -= (float)game_time.ElapsedGameTime.TotalSeconds;

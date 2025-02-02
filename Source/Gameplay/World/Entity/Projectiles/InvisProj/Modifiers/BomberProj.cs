@@ -10,7 +10,6 @@ namespace EndlessSpace
             Name = "Bomber Modifier";
             damage = 10f;
             speed = 0f;
-            tick_time = new CountdownTimer(0.01f);
         }
 
         public override void ProjPosition(GameTime game_time) { }
