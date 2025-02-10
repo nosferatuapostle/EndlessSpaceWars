@@ -4,6 +4,7 @@ using MonoGame.Extended.Timers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace EndlessSpace
 {
@@ -13,7 +14,6 @@ namespace EndlessSpace
 
         PlayerCharacter player;
         List<Unit> unit_list;
-        CountdownTimer timer;
         Vector2 offset;
         readonly UnitFaction[] factions;
         HashSet<ulong> asteroid_ids;
@@ -22,7 +22,6 @@ namespace EndlessSpace
         {
             this.player = player;
             this.unit_list = unit_list;
-            timer = new CountdownTimer(0.25f);
             offset = new Vector2(Globals.Random.Next((int)NPC.RADIUS / 2, (int)NPC.RADIUS), 0);
             factions = new[] { UnitFaction.Biomantes, UnitFaction.DuskFleet, UnitFaction.IronCorpse };
             asteroid_ids = new HashSet<ulong>();
@@ -45,7 +44,24 @@ namespace EndlessSpace
                     EntityManager.PassUnit(asteroid);
                 }
             }
-        }        
+
+            Task.Run(async () => await AsyncSpawn());
+        }
+
+        async Task AsyncSpawn()
+        {
+            while (true)
+            {
+                while (true/*MainMenu.active*/) await Task.Delay(1200);
+
+                SpawnAsteroid();
+                await Task.Delay(Globals.Random.Next(1000, 3000));
+                if (EntityManager.UnitsCount <= NPC_COUNT)
+                {
+                    HandleEncounter();
+                }
+            }
+        }
 
         private void SpawnAsteroid()
         {
@@ -95,20 +111,15 @@ namespace EndlessSpace
             return new NPC(selected_unit, unit_list, level, owner);
         }
 
-
-        public void Update(GameTime game_time)
-        {
-            timer.Update(game_time);
-            SpawnAsteroid();
-            if (timer.State == TimerState.Completed && EntityManager.UnitsCount <= NPC_COUNT)
-            {
-                HandleEncounter();
-                //SoloUnit();
-                //FactionClash();
-                //SpaceStation(Position());
-                timer.Restart();
-            }
-        }
+        //public void Update(GameTime game_time)
+        //{
+        //    timer.Update(game_time);
+        //    if (timer.State == TimerState.Completed && EntityManager.UnitsCount <= NPC_COUNT)
+        //    {
+        //        //HandleEncounter();
+        //        timer.Restart();
+        //    }
+        //}
 
         private void HandleEncounter()
         {
@@ -252,8 +263,6 @@ namespace EndlessSpace
 
             return position == Vector2.Zero && Vector2.Distance(position, player.Position) < (NPC.RADIUS * 2f) && unit_list.Any(unit => Vector2.Distance(position, unit.Position) < NPC.RADIUS) ? Position() : position;
         }
-
-
 
         private Vector2[] ObjectPosition(Vector2 center, int count, float min_distance = 50f)
         {

@@ -48,7 +48,7 @@ namespace EndlessSpace
 
         public void SetBehavior(Behavior behavior) => AI.SetBehavior(behavior);
 
-        private void Scope(IEnumerable<Unit> unit_list)
+        void Scope(IEnumerable<Unit> unit_list)
         {
             if (type is Asteroid) return;
             detected_units.Clear();

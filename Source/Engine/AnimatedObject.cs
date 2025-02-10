@@ -12,13 +12,10 @@ namespace EndlessSpace
         string[] path;
 
         int x, y;
-
         protected Texture2DAtlas[] atlas;
         protected SpriteSheet[] sheets;
         protected AnimatedSprite animated_sprite;
         protected Dictionary<string, AnimatedSprite> animations = new Dictionary<string, AnimatedSprite>();
-
-        public AnimatedSprite AnimatedSprite => animated_sprite;
 
         public AnimatedObject(string[] path, Vector2 position, Vector2 size) : base(null, position, size)
         {

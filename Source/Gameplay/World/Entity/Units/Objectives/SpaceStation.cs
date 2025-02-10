@@ -40,7 +40,7 @@ namespace EndlessSpace
             AddAnimation(index, "death", 1, false);
         }
 
-        private Vector2 InitData(UnitFaction faction)
+        Vector2 InitData(UnitFaction faction)
         {
             switch (faction)
             {

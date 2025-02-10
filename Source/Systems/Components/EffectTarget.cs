@@ -35,7 +35,7 @@ namespace EndlessSpace
 
         public void RemoveEffect(string name)
         {
-            foreach (UnitEffect effect in unit_effects)
+            foreach (var effect in unit_effects)
             {
                 if (effect.Name == name)
                 {

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using MonoGame.Extended.Particles.Modifiers;
 using MonoGame.Extended.Particles.Modifiers.Interpolators;
+using System.Threading.Tasks;
 
 namespace EndlessSpace
 {
@@ -38,8 +39,7 @@ namespace EndlessSpace
             level = 1;
             unit_event = new UnitEvent();
 
-            Vector2 scaled_size = Size * Scale;
-            radius = MathF.Sqrt(scaled_size.X * scaled_size.X + scaled_size.Y * scaled_size.Y) / 4f;
+            radius = MathF.Sqrt(Size.X * Size.X + Size.Y * Size.Y) / 4f;
 
             base_values = new Dictionary<UnitValue, UnitValueInfo>
             {
@@ -169,9 +169,8 @@ namespace EndlessSpace
         {
             if (collision_info.Other is Unit unit)
             {
-                Vector2 scaled = unit.Size * unit.Scale;
                 float distance = Vector2.Distance(Position, unit.Position);
-                float radius = MathF.Sqrt(scaled.X * scaled.X + scaled.Y * scaled.Y) / 4f;
+                float radius = MathF.Sqrt(Size.X * Size.X + Size.Y * Size.Y) / 4f;
 
                 if (distance == 0f)
                 {
@@ -179,7 +178,7 @@ namespace EndlessSpace
                 }
                 else if (unit.HasKeyword("space_station") && this != unit)
                 {
-                    RectangleF unit_rectangle = new RectangleF(unit.Position - scaled / 2f, scaled);
+                    RectangleF unit_rectangle = new RectangleF(unit.Position - Size / 2f, Size);
 
                     if (Position.X > unit_rectangle.Left && Position.X < unit_rectangle.Right && Position.Y > unit_rectangle.Top && Position.Y < unit_rectangle.Bottom)
                     {
@@ -209,28 +208,31 @@ namespace EndlessSpace
 
         public virtual void GetDamage(Unit source, float damage, Color throb_color)
         {
-            effect_target.ActivateThrob(throb_color);
+            Task.Run(() =>
+            {
+                effect_target.ActivateThrob(throb_color);
 
-            if (source == null || Faction == UnitFaction.Summoned) return;
-            Event.OnAttacked(this, source, ref damage);
+                if (source == null || Faction == UnitFaction.Summoned) return;
+                Event.OnAttacked(this, source, ref damage);
 
-            if (damage <= 0f) return;
+                if (damage <= 0f) return;
 
-            float resistance = GetUnitValue(UnitValue.DamageResist);
-            float magnitude = source.GetUnitValue(UnitValue.Magnitude);
+                float resistance = GetUnitValue(UnitValue.DamageResist);
+                float magnitude = source.GetUnitValue(UnitValue.Magnitude);
 
-            if (Random.Shared.NextDouble() < source.GetUnitValue(UnitValue.CriticalChance))
-                damage *= CRITICAL_MULTIPLIER;
+                if (Random.Shared.NextDouble() < source.GetUnitValue(UnitValue.CriticalChance))
+                    damage *= CRITICAL_MULTIPLIER;
 
-            float final_damage = damage.Calc(resistance, magnitude);
+                float final_damage = damage.Calc(resistance, magnitude);
 
-            if (final_damage > 0.5f)
-                info.AddFloatingDamage(final_damage, Color.Red);
+                if (final_damage > 0.5f)
+                    info.AddFloatingDamage(final_damage, Color.Red);
 
-            RestoreUnitValue(UnitValue.Health, -final_damage);
+                RestoreUnitValue(UnitValue.Health, -final_damage);
 
-            if (GetUnitValue(UnitValue.Health) <= 0)
-                OnDeath(this, source);
+                if (GetUnitValue(UnitValue.Health) <= 0)
+                    OnDeath(this, source);
+            });            
         }
 
         protected virtual void OnDeath(Unit dying, Unit killer)
@@ -246,12 +248,14 @@ namespace EndlessSpace
 
         protected void AddKillReward(PlayerCharacter player, Unit dying)
         {
-            if (dying is NPC npc && npc.IsPlayerTeammate) return;
-            player.Experience.AddExp(MathF.Max(1f, dying.Level * (dying.Level / player.Level)));
-            return;
-            /*if (dying is NPC npc && npc.IsBoss)
+            Task.Run(() =>
             {
-            }*/
+                if (dying is NPC npc && npc.IsPlayerTeammate) return;
+                float d_level = dying.Level;
+                float k_level = player.Level;
+                float exp_modifier = (d_level / k_level) / 2f + 1f;
+                player.Experience.AddExp((int)(10f * exp_modifier));
+            });
         }
 
         public virtual void Kill()

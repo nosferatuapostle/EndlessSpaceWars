@@ -12,7 +12,7 @@ namespace EndlessSpace
 
         public bool IsComplete { get { return bolts.Count == 0; } }
         public Vector2 End { get; private set; }
-        private Vector2 direction;
+        Vector2 direction;
 
         static Random rand = new Random();
 
@@ -23,11 +23,11 @@ namespace EndlessSpace
             Create(start, end);
         }
 
-        public void Update()
+        public void Update(GameTime game_time)
         {
             bolts = bolts.Where(x => !x.IsComplete).ToList();
             foreach (var bolt in bolts)
-                bolt.Update();
+                bolt.Update(game_time);
         }
 
         public void Draw(SpriteBatch sprite_batch)
@@ -36,7 +36,7 @@ namespace EndlessSpace
                 bolt.Draw(sprite_batch);
         }
 
-        private void Create(Vector2 start, Vector2 end)
+        void Create(Vector2 start, Vector2 end)
         {
             var main_bolt = new LightningBolt(start, end);
             bolts.Add(main_bolt);

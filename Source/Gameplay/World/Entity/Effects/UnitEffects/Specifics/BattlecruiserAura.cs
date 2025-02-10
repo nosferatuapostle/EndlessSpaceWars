@@ -8,6 +8,7 @@ namespace EndlessSpace
         
         public BattlecruiserAura(Unit source) : base("Battlecruiser Aura", source, null, 0.25f, 0f, 0f)
         {
+            AddKeyword("specific");
             ActivateAura();
         }
 

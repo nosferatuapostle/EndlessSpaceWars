@@ -13,32 +13,16 @@ namespace EndlessSpace
         public Skill current_skill;
         public readonly HashSet<Skill> used_skills;
 
-        static ulong next_id = 0;
-        public ulong ID { get; private set; } = 0;
+        static ulong next_id = 1;
+        public ulong ID { get; protected set; } = 0;
 
         public Character(Unit unit, List<Unit> unit_list) : base(unit.GetPath, unit.Position, unit.Size, unit.Faction, unit_list)
         {
             ID = ++next_id;
 
-            type = unit;
-            Name = unit.Name;
-            Scale = unit.Scale;
-
-            base_values = unit.Values;
-
-            engine = unit.Engine;
-            unit.Engine?.SetUnit(this);
-            skill_list = unit.Skills;
-
-            if (unit_list != null) info = new UnitInfo(this, unit_list);
-
             used_skills = new HashSet<Skill>();
-            weapon.SwitchProjectile(unit.Projectile);
-            ApplySpecific(unit, unit_list);
 
-            CopyAnimations(unit.GetAnimations);
-            SetAnimation("attack");
-            if (animated_sprite == null) SetAnimation("idle");
+            SetUnitType(unit, unit_list);
 
             animations["death"].Controller.OnAnimationEvent += (s, t) =>
             {
@@ -57,6 +41,29 @@ namespace EndlessSpace
             next_id = 0;
         }
 
+        public void SetUnitType(Unit unit, List<Unit> unit_list)
+        {
+            type = unit;
+            Name = unit.Name;
+            Scale = unit.Scale;
+
+            base_values = unit.Values;
+
+            engine = unit.Engine;
+            unit.Engine?.SetUnit(this);
+            skill_list = unit.Skills;
+
+            if (unit_list != null) info = new UnitInfo(this, unit_list);
+
+            weapon.SwitchProjectile(unit.Projectile);
+            ApplySpecific(unit, unit_list);
+
+            //if (animated_sprite != null) animated_sprite.Controller.Stop();
+            CopyAnimations(unit.GetAnimations);
+            SetAnimation("attack");
+            if (animated_sprite == null) SetAnimation("idle");
+        }
+
         public override void Update(GameTime game_time)
         {
             used_skills.RemoveWhere(skill => skill == null || skill.IsReady);
@@ -72,6 +79,12 @@ namespace EndlessSpace
 
         public void ApplySpecific(Unit unit, List<Unit> unit_list)
         {
+            for (int i = 0; i < effect_target.ActiveEffects.Count; i++)
+            {
+                if (!effect_target.ActiveEffects[i].HasKeyword("specific")) continue;
+                effect_target.RemoveEffect(effect_target.ActiveEffects[i]);
+            }
+
             switch (unit)
             {
                 case Battlecruiser:
@@ -143,9 +156,8 @@ namespace EndlessSpace
 
         public override RectangleF GetRectangle()
         {
-            Vector2 scaled = Size * Scale;
-            if (Faction == UnitFaction.Summoned || HasKeyword("space_station")) return new RectangleF(Position - scaled / 2f, scaled);
-            if (type is Asteroid) return new RectangleF(Position - scaled / 4f, scaled / 2f);
+            if (Faction == UnitFaction.Summoned || HasKeyword("space_station")) return new RectangleF(Position - Size / 2f, Size);
+            if (type is Asteroid) return new RectangleF(Position - Size / 4f, Size / 2f);
             return base.GetRectangle();
         }
     }

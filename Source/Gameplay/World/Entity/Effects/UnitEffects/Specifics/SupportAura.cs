@@ -9,10 +9,12 @@ namespace EndlessSpace
 
         public SupportAura(Unit source) : base("Support Aura", source, null, 0f, 0f, 0f)
         {
+            AddKeyword("specific");
+
             ActivateAura();
         }
 
-        private void ActivateAura()
+        void ActivateAura()
         {
             if (projectile != null) projectile.on_destroy -= ActivateAura;
             projectile = new SupportAuraProj(source.Position, source);

@@ -56,7 +56,7 @@ namespace EndlessSpace
 
         public Vector2 Size
         {
-            get { return dims; }
+            get { return dims * scale; }
             set { dims = value; }
         }
 
@@ -87,16 +87,20 @@ namespace EndlessSpace
         }
 
         public IShapeF Bounds { get; protected set; }
-
+        
         public virtual bool IsHovered()
+        {
+            return GetRectangle().Contains(Input.MousePosition.ToPoint().ToVector2());
+        }
+
+        public virtual bool IsHoveredInWorld()
         {
             return GetRectangle().Contains(World.Camera.ScreenToWorld(Input.MousePosition.ToPoint().ToVector2()));
         }
 
         public virtual RectangleF GetRectangle()
         {
-            Vector2 scaled = dims * Scale;
-            return new RectangleF(pos - scaled / 3f, scaled / 1.5f);
+            return new RectangleF(pos - Size / 3f, Size / 1.5f);
         }
 
         public virtual void Draw(SpriteBatch sprite_batch)

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using System;
 
@@ -8,7 +7,7 @@ namespace EndlessSpace
 {
     public class Main : Game
     {
-        readonly GraphicsDeviceManager graphics_device;
+        public readonly GraphicsDeviceManager graphics;
         SpriteBatch sprite_batch;
 
         FramesPerSecondCounter frame_counter;
@@ -17,39 +16,39 @@ namespace EndlessSpace
 
         public Main()
         {
-            graphics_device = new GraphicsDeviceManager(this);
+            graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
             Window.Title = "Endless Space";
             Window.AllowUserResizing = true;
             Window.Position = Point.Zero;
             IsMouseVisible = false;
-        }
 
-        protected override void Initialize()
-        {
-            TargetElapsedTime = TimeSpan.FromSeconds(1 / 60f);
             IsFixedTimeStep = true;
+            TargetElapsedTime = TimeSpan.FromMilliseconds(1);
             frame_counter = new FramesPerSecondCounter();
 
-            graphics_device.PreferredBackBufferWidth = 980; //1920
-            graphics_device.PreferredBackBufferHeight = 620; //1080;
-            graphics_device.ApplyChanges();
+            graphics.HardwareModeSwitch = false;
 
-            base.Initialize();
+            graphics.PreferredBackBufferWidth = 800;
+            //graphics.PreferredBackBufferWidth = 1920;
+            graphics.PreferredBackBufferHeight = 600;
+            //graphics.PreferredBackBufferHeight = 1080;
+            graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
+            graphics.ApplyChanges();
         }
 
         protected override void LoadContent()
         {
             sprite_batch = new SpriteBatch(GraphicsDevice);
+            Globals.Save = new Save(1, "EndlessSpace");
 
             Globals.Content = Content;
             ParticleData.Load(GraphicsDevice);
 
-            Shader.Throb = Content.Load<Effect>("Shaders\\Throb");
-            Shader.GrayScale = Content.Load<Effect>("Shaders\\Grayscale");
-            Shader.Outline = Content.Load<Effect>("Shaders\\Outline");
+            Globals.Load();
 
-            game_manager = new GameManager(this, GraphicsDevice, Window);
+            game_manager = new GameManager(this, GraphicsDevice, graphics);
         }
 
         protected override void UnloadContent()
@@ -60,16 +59,10 @@ namespace EndlessSpace
 
         protected override void Update(GameTime game_time)
         {
-            if (Input.IsKeyDown(Keys.Escape))
-                Exit();
-
             frame_counter.Update(game_time);
             Window.Title = $"Endless Space - FPS: {frame_counter.FramesPerSecond}, UNITS: {EntityManager.UnitsCount}";
-
             Input.Update();
 
-            //var elapsedTime = MeasureExecutionTime(() => game_manager.Update(game_time));
-            //Debug.WriteLine($"Scope executed in {elapsedTime} ms");
             game_manager.Update(game_time);
 
             base.Update(game_time);
@@ -81,7 +74,6 @@ namespace EndlessSpace
             frame_counter.Draw(game_time);
 
             game_manager.Draw(sprite_batch, game_time);
-
             base.Draw(game_time);
         }
     }

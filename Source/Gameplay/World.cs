@@ -16,10 +16,10 @@ namespace EndlessSpace
         PlayerCharacter player;
 
         CollisionComponent collision_component;
-        
+
         EntityManager entity_manager;
         EffectManager effect_manager;
-        
+
         EncounterZone encounter_zone;
 
         public World(GraphicsDevice graphics_device, GameWindow window)
@@ -40,6 +40,12 @@ namespace EndlessSpace
 
             Vector2 position = new Vector2(graphics_device.Viewport.Width / 2, graphics_device.Viewport.Height / 2);
             player = new PlayerCharacter(new Scout(position, UnitFaction.Biomantes), entity_manager.Units);
+            player.LoadData(new Dreadnought(position, UnitFaction.DuskFleet), entity_manager.Units);
+            player.EffectTarget.AddEffect(new BiomantesInvisabilityEffect(player));
+            player.EffectTarget.AddEffect(new BiomantesInvisabilityEffect(player));
+            player.EffectTarget.AddEffect(new BiomantesInvisabilityEffect(player));
+            player.EffectTarget.AddEffect(new BiomantesInvisabilityEffect(player));
+            player.EffectTarget.AddEffect(new BiomantesInvisabilityEffect(player));
             EntityManager.PassUnit(player);
 
             encounter_zone = new EncounterZone(player, entity_manager.Units);
@@ -52,8 +58,6 @@ namespace EndlessSpace
         bool camera_to_player = false;
         public void Update(GameTime game_time)
         {
-            EntityManager.UnitsCount = entity_manager.Units.Count;
-
             if (Input.WasKeyPressed(Keys.Space))
             {
                 camera_to_player = !camera_to_player;
@@ -69,8 +73,6 @@ namespace EndlessSpace
             collision_component.Update(game_time);
 
             effect_manager.Update(game_time);
-
-            encounter_zone.Update(game_time);
         }
 
         public Vector2 pos = new Vector2(-200, -200);

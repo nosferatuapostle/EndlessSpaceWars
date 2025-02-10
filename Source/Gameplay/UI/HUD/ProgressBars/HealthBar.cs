@@ -18,7 +18,7 @@ namespace EndlessSpace
 
             size = new Vector2(unit_size.X / 2f, 4f);
             delayed_value = unit.GetUnitValue(UnitValue.Health);
-            delayed_foreground = new BasicObject("Textures\\UI\\ProgressBarWhite", Vector2.Zero, size);
+            delayed_foreground = new BasicObject("Textures\\UI\\progress_bar_01", Vector2.Zero, size);
 
             switch (unit.Faction)
             {

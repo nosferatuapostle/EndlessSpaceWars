@@ -10,16 +10,16 @@ namespace EndlessSpace
         {
             base_values = new Dictionary<UnitValue, UnitValueInfo>
             {
-                { UnitValue.Health, new UnitValueInfo(UnitValue.Health, 10f) },
+                { UnitValue.Health, new UnitValueInfo(UnitValue.Health, 5f) },
                 { UnitValue.Heal, new UnitValueInfo(UnitValue.Heal, 0f) },
                 { UnitValue.HealRate, new UnitValueInfo(UnitValue.HealRate, 1f, 2f) },
                 { UnitValue.CriticalChance, new UnitValueInfo(UnitValue.CriticalChance, 0f, 1f) },
                 { UnitValue.Magnitude, new UnitValueInfo(UnitValue.Magnitude, 1f) },
-                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 0f) },
+                { UnitValue.DamageResist, new UnitValueInfo(UnitValue.DamageResist, 0.01f) },
                 { UnitValue.SpeedMult, new UnitValueInfo(UnitValue.SpeedMult, 0f, 2f) }
             };
 
-            values_increase = new float[] { 1f, 0f, 0f, 0f, 0f, 0f, 0f };
+            values_increase = new float[] { 1f, 0f, 0f, 0f, 0f, 0.01f, 0f };
 
             Name = "Asteroid";
             float scale_multiplier = (float)Globals.Random.NextSingle(0.5f, 1.25f);

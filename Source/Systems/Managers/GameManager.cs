@@ -8,7 +8,11 @@ namespace EndlessSpace
 {
     public class GameManager
     {
+        readonly Game game;
+        bool init = false;
+
         GraphicsDevice graphics_device;
+        GraphicsDeviceManager graphics;
         GameWindow window;
 
         ImGuiRenderer gui_renderer;
@@ -20,54 +24,64 @@ namespace EndlessSpace
         BasicObject cursor;
         UserInterface user_interface;
 
-        public GameManager(Game game, GraphicsDevice graphics_device, GameWindow window)
+        public GameManager(Game game, GraphicsDevice graphics_device, GraphicsDeviceManager graphics)
         {
+            this.game = game;
             this.graphics_device = graphics_device;
-            this.window = window;
+            this.graphics = graphics;
+            window = game.Window;
 
             gui_renderer = new ImGuiRenderer(game).Initialize().RebuildFontAtlas();
 
             world = new World(graphics_device, window);
-
             background = new Background(graphics_device, PlayerCharacter);
 
-            cursor = new BasicObject("Textures\\UI\\PointerFilled", Vector2.Zero, new Vector2(22, 31) * 0.5f);
-            user_interface = new UserInterface(world.PlayerCharacter);
+            user_interface = new UserInterface(game, graphics_device, graphics, world.PlayerCharacter);
+            cursor = new BasicObject("Textures\\UI\\pointer_01", Vector2.Zero, new Vector2(22, 31) * 0.5f);
         }
 
         EntityManager EntityManager => world.EntityManager;
         PlayerCharacter PlayerCharacter => world.PlayerCharacter;
-
+        
         public void Update(GameTime game_time)
         {
-            if (/*Input.WasKeyPressed(Microsoft.Xna.Framework.Input.Keys.R) ||*/ is_reset)
+            if (!init) init = true;
+            else if (MainMenu.active) goto skip;
+
+            world.Update(game_time);
+            background.Update(game_time);
+
+            skip:
+            user_interface.Update(game_time);
+
+            WorldItems();
+        }
+
+        void WorldItems()
+        {
+            if (is_reset)
             {
                 Character.ResetNextID();
                 world = new World(graphics_device, window);
-                user_interface = new UserInterface(world.PlayerCharacter);
+                user_interface = new UserInterface(game, graphics_device, graphics, world.PlayerCharacter);
                 is_reset = false;
             }
 
             if (Input.WasKeyPressed(Microsoft.Xna.Framework.Input.Keys.G))
             {
-                EntityManager.PassUnit(new NPC(new Scout(world.PlayerCharacter.Position + new Vector2(100, 100), UnitFaction.Biomantes), EntityManager.Units, 5));
+                EntityManager.PassUnit(new NPC(new Frigate(world.PlayerCharacter.Position + new Vector2(100, 100), UnitFaction.Biomantes), EntityManager.Units, 5));
             }
-
-            world.Update(game_time);
-            background.Update(game_time);
-
-            user_interface.Update(graphics_device, game_time);
         }
+
 
         public void Draw(SpriteBatch sprite_batch, GameTime game_time)
         {
             background.Draw(sprite_batch);
             world.Draw(sprite_batch);
-
             gui_renderer.BeginLayout(game_time);
             DisplayUnitInfo();
             gui_renderer.EndLayout();
-
+                        
             sprite_batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
             user_interface.Draw(sprite_batch);
             cursor.Draw(sprite_batch, Input.MousePosition, Vector2.Zero, Color.White);
@@ -77,23 +91,11 @@ namespace EndlessSpace
         bool is_reset = false;
         private void DisplayUnitInfo()
         {
-            /*float new_x = world.pos.X;
-            float new_y = world.pos.Y;
-            ImGui.Text($"Position:\n");
-            if (ImGui.InputFloat($"X", ref new_x, 2f))
-            {
-                world.pos = new Vector2(new_x, new_y);
-            }
-            if (ImGui.InputFloat($"Y", ref new_y, 2f))
-            {
-                world.pos = new Vector2(new_x, new_y);
-            }*/
-
             if (ImGui.Button("Reset World"))
             {
                 is_reset = true;
             }
-            ImGui.Text($"Camera: X - {World.Camera.BoundingRectangle.X}, Y - {World.Camera.BoundingRectangle.Y}");
+            ImGui.Text($"{game.IsFixedTimeStep}");
             ImGui.Text("");
 
             {

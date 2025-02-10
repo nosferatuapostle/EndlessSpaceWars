@@ -18,7 +18,7 @@ namespace EndlessSpace
 
         public static bool ShaderCondition(Unit unit)
         {
-            return (!GameGlobals.SelectCondition(unit) && (unit.IsHovered() || unit.is_selected)) || unit.HasKeyword("stone_armor") || unit.EffectTarget.IsThrob;
+            return (!SelectCondition(unit) && (unit.IsHoveredInWorld() || unit.is_selected)) || unit.EffectTarget.IsThrob;
         }
 
         public static NPC CommandedNPC(Unit owner, List<Unit> unit_list)

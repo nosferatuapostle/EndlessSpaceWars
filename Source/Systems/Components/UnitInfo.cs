@@ -39,10 +39,10 @@ namespace EndlessSpace
             this.unit = unit;
             this.unit_list = unit_list;
 
+            font = Font.CourierNew16;
+
             text = string.Empty;
             color = Color.White;
-
-            font = Globals.Content.Load<BitmapFont>("Fonts/CourierNew16");
 
             health_bar = new HealthBar(unit);
 
@@ -133,7 +133,7 @@ namespace EndlessSpace
 
                 sprite_batch.DrawCircle(npc.detection_radius, 100, Color.Green * 0.3f, 1f);
             }*/
-
+            if (MainMenu.active || SettingsMenu.active) return;
             if (!unit.IsDead)
             {
                 sprite_batch.DrawString(font, text, position, color);

@@ -16,8 +16,8 @@ namespace EndlessSpace
             this.size = size;
             color = Color.White;
 
-            foreground = new BasicObject("Textures\\UI\\ProgressBarWhite", Vector2.Zero, size);
-            background = new BasicObject("Textures\\UI\\ProgressBarBKG", Vector2.Zero, size);
+            foreground = new BasicObject("Textures\\UI\\progress_bar_01", Vector2.Zero, size);
+            background = new BasicObject("Textures\\UI\\progress_bar_00", Vector2.Zero, size);
         }
 
         public virtual void Update(float instance, float current, float delta_time)

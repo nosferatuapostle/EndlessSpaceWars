@@ -9,6 +9,8 @@ namespace EndlessSpace
         
         public FrigateDamageReflect(Unit source) : base("Frigate Damage Reflect", source, null, 0.01f, 0f, 0f)
         {
+            AddKeyword("specific");
+
             total_magnitude = 0f;
             previous_level = source.Level;
 
@@ -17,9 +19,9 @@ namespace EndlessSpace
             source.Event.on_attacked += ReflectDamage;
         }
 
-        private void ReflectDamage(Unit victim, Unit source, ref float damage)
+        void ReflectDamage(Unit victim, Unit source, ref float damage)
         {
-            if (source.Faction == UnitFaction.Summoned) return;
+            if (source == null || source.Faction == UnitFaction.Summoned) return;
 
             float resistance = victim.GetUnitValue(UnitValue.DamageResist);
             float magnitude = source.GetUnitValue(UnitValue.Magnitude);

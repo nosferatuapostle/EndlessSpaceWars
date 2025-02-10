@@ -8,13 +8,15 @@ namespace EndlessSpace
 
         public ScoutEvasion(Unit source) : base("Scout Evasion", source, null, 0.005f, 0)
         {
+            AddKeyword("specific");
+
             evade_chance = base_magnitude * source.Level;
             previous_level = source.Level;
 
             source.Event.on_attacked += OnAttacked;
         }
 
-        private void OnAttacked(Unit victim, Unit aggressor, ref float damage)
+        void OnAttacked(Unit victim, Unit aggressor, ref float damage)
         {
             if (Globals.Random.NextDouble() < MathF.Min(0.5f, evade_chance)) damage = 0f;
         }

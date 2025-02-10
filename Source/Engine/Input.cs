@@ -28,6 +28,8 @@ namespace EndlessSpace
         public static bool IsRightClick => IsMouseButtonDown(MouseButton.Right);
         public static bool WasLeftClick => WasMouseButtonPressed(MouseButton.Left);
         public static bool WasRightClick => WasMouseButtonPressed(MouseButton.Right);
+        public static bool LeftClickDone => WasMouseButtonReleased(MouseButton.Left);
+        public static bool ReleasedRightClick => WasMouseButtonReleased(MouseButton.Right);
 
         public static bool IsKeyDown(Keys key)
         {

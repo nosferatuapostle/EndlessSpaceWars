@@ -20,12 +20,14 @@ namespace EndlessSpace
         CountdownTimer tick_time;
 
         protected ParticleEffect particle_effect;
+        KeywordObject keyword_object;
 
         protected UnitEffect(string name, Unit source, Unit target, float magnitude, float duration = 0f, float tick_interval = 0.2f)
         {
             ID = ++next_id;
 
             Name = name;
+            keyword_object = new KeywordObject();
 
             this.source = source;
             this.target = target;
@@ -48,9 +50,12 @@ namespace EndlessSpace
         public string Name { get; private set; }
         public bool IsDone { get; protected set; } = false;
 
+        public void AddKeyword(string keyword) => keyword_object.AddKeyword(keyword);
+        public bool HasKeyword(string keyword) => keyword_object.HasKeyword(keyword);
+
         protected void UpdateMagnitude() => magnitude = base_magnitude * source.GetUnitValue(UnitValue.Magnitude);
 
-        private void OnDeath(Unit source, Unit target) => IsDone = true;
+        void OnDeath(Unit source, Unit target) => IsDone = true;
         protected virtual void OnLevelUp() { }
 
         public virtual void Update(GameTime game_time)

@@ -16,6 +16,8 @@ namespace EndlessSpace
 
         public DreadnoughtCommander(Unit source, List<Unit> unit_list) : base("Dreadnought Commander", source, null, 0f, 0f, 0f)
         {
+            AddKeyword("specific");
+
             total_count = 0;
             this.unit_list = unit_list;
 

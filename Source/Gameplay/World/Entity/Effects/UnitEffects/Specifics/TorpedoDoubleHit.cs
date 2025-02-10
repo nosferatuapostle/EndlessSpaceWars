@@ -11,6 +11,8 @@ namespace EndlessSpace
 
         public TorpedoDoubleHit(Unit source, Weapon weapon) : base("Torpedo Double Hit", source, null, 0f, 0f, 0f)
         {
+            AddKeyword("specific");
+
             this.weapon = weapon;
             was_attack = false;
 
@@ -19,7 +21,7 @@ namespace EndlessSpace
             source.Event.on_attack += OnAttack;
         }
 
-        private void OnAttack(Unit attacker, Unit target)
+        void OnAttack(Unit attacker, Unit target)
         {
             if (attacker == source)
             {

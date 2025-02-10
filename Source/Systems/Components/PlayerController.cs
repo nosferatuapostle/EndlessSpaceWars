@@ -112,7 +112,7 @@ namespace EndlessSpace
                 foreach (var unit in unit_list)
                 {
                     if (unit == null || unit.Faction == UnitFaction.Summoned || unit is PlayerCharacter) continue;
-                    if (unit.IsHovered())
+                    if (unit.IsHoveredInWorld())
                     {
                         target_unit = unit;
                         target_state = TargetState.Unit;
@@ -129,7 +129,7 @@ namespace EndlessSpace
 
                     var character = unit as Character;
 
-                    if (unit.IsHovered())
+                    if (unit.IsHoveredInWorld())
                     {
                         if (selected_unit != null) selected_unit.is_selected = false;
                         selected_unit = unit;

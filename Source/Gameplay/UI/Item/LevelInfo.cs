@@ -17,7 +17,8 @@ namespace EndlessSpace
         {
             this.player = player;
 
-            font = Globals.Content.Load<BitmapFont>("Fonts/CourierNew16");
+            text = string.Empty;
+            font = Font.CourierNew16;
         }
 
         public virtual void Update(GameTime game_time, LevelBar level_bar)

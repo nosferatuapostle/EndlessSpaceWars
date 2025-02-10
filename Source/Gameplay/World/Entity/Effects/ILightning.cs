@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace EndlessSpace
 {
@@ -6,7 +7,7 @@ namespace EndlessSpace
     {
         bool IsComplete { get; }
 
-        void Update();
+        void Update(GameTime game_time);
         void Draw(SpriteBatch sprite_batch);
     }
 }

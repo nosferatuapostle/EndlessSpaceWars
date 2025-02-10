@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace EndlessSpace
 {
@@ -13,6 +14,7 @@ namespace EndlessSpace
 
         public PlayerCharacter(Unit unit, List<Unit> unit_list) : base(unit, unit_list)
         {
+            ID = 1;
             controller = new PlayerController(this, unit_list);
 
             experience = new Experience(this);
@@ -28,9 +30,35 @@ namespace EndlessSpace
         public void UnKillable() => IsUnKillable = !IsUnKillable;
 
         public Experience Experience => experience;
-        public void LevelUp() => on_level_up?.Invoke();
+        public void OnLevelUp() => on_level_up?.Invoke();
 
         public void SetFaction(UnitFaction faction) => Faction = faction;
+
+        public void SaveData()
+        {
+            XDocument xml = new XDocument(
+                new XElement("Player",
+                    new XElement("Level", Level)
+                )
+            );
+
+            Globals.Save.HandleSaveFormat(xml, "player");
+        }
+
+        public void LoadData(Unit unit, List<Unit> unit_list)
+        {
+            XDocument xml = Globals.Save.LoadFile("player");
+            if (xml == null) return;
+
+            XElement root = xml.Element("Player");
+            if (root == null) return;
+
+            int level = int.Parse(root.Element("Level")?.Value ?? "1");
+
+            while (Level < level) experience.AddExp(experience.NextXP);
+
+            SetUnitType(unit, unit_list);
+        }
 
         public override void Update(GameTime game_time)
         {

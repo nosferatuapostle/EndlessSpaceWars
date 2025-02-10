@@ -33,8 +33,7 @@ namespace EndlessSpace
             this.target = target;
             life_time = new CountdownTimer(18f);
 
-            Vector2 scaled_size = Size * Scale;
-            radius = MathF.Sqrt(scaled_size.X * scaled_size.X + scaled_size.Y * scaled_size.Y) / 4f;
+            radius = MathF.Sqrt(Size.X * Size.X + Size.Y * Size.Y) / 4f;
 
             if (target == null) return;
             direction = direction = Vector2.Normalize((target as Unit).Position - Position);

@@ -3,6 +3,7 @@ using MonoGame.Extended.Timers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace EndlessSpace
 {
@@ -52,12 +53,11 @@ namespace EndlessSpace
         
         State state;
         Behavior behavior;
-        public Behavior Behavior => behavior;
 
         public Unit owner;
         public HashSet<Unit> target_list;
 
-        public Unit current_target => target_list
+        public Unit current_target => target_list.ToList()
             .Where(unit => unit != owner && unit != npc && !unit.IsDead)
             .OrderBy(unit => unit.HasKeyword("invisible") ? 1 : 0)
             .ThenBy(unit => unit == owner?.Target ? 0 : 1)
@@ -82,6 +82,8 @@ namespace EndlessSpace
             }
             while (direction == Vector2.Zero);
 
+            _ = RefreshTarget();
+
             npc.Event.on_attacked += OnAttacked;
             if (owner == null) return;
             owner.Event.on_attacked += OnAttacked;
@@ -89,7 +91,7 @@ namespace EndlessSpace
 
         public void SetBehavior(Behavior behavior) => this.behavior = behavior;
 
-        private void OnAttacked(Unit attacked, Unit aggressor, ref float damage)
+        void OnAttacked(Unit attacked, Unit aggressor, ref float damage)
         {
             if (aggressor.Faction == UnitFaction.Summoned && aggressor is NPC npc && npc.owner != null)
             {
@@ -113,21 +115,25 @@ namespace EndlessSpace
             }
         }
 
-        private void RefreshTarget()
+        async Task RefreshTarget()
         {
-            target_list.RemoveWhere(unit => unit.IsDead || Vector2.Distance(unit.Position, npc.Position) > MAX_DISTANCE);
-            
-            if (owner?.Target != null && owner.Target.HostileTo(owner) && Vector2.Distance(owner.Position, owner.Target.Position) < NPC.RADIUS) target_list.Add(owner.Target);
-
-            foreach (var unit in npc.detected_units)
+            while (true)
             {
-                if (GameGlobals.UnAttackable(unit) || unit.HasKeyword("asteroid")) continue;
-                if (owner != null && (unit.HostileTo(owner) || owner.HostileTo(unit)))
+                await Task.Delay(500);
+                target_list.RemoveWhere(unit => unit.IsDead || Vector2.Distance(unit.Position, npc.Position) > MAX_DISTANCE);
+
+                if (owner?.Target != null && owner.Target.HostileTo(owner) && Vector2.Distance(owner.Position, owner.Target.Position) < NPC.RADIUS) target_list.Add(owner.Target);
+
+                foreach (var unit in npc.detected_units)
                 {
-                    target_list.Add(unit);
-                    return;
+                    if (unit == null || GameGlobals.UnAttackable(unit) || unit.HasKeyword("asteroid")) continue;
+                    if (owner != null && (unit.HostileTo(owner) || owner.HostileTo(unit)))
+                    {
+                        target_list.Add(unit);
+                        return;
+                    }
+                    else if (owner == null && unit.HostileTo(npc)) target_list.Add(unit);
                 }
-                else if (owner == null && unit.HostileTo(npc)) target_list.Add(unit);
             }
         }
 
@@ -279,7 +285,6 @@ namespace EndlessSpace
 
                 direction = MathF.Abs(to_player.X) > MathF.Abs(to_player.Y) ? new Vector2(MathF.Sign(to_player.X), 0) * DIRECTION_MULT : new Vector2(0, MathF.Sign(to_player.Y)) * DIRECTION_MULT;
             }
-            RefreshTarget();
             UpdateState();
             ExecuteState(delta_time);
             skip:

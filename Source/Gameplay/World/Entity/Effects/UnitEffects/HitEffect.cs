@@ -15,7 +15,11 @@ namespace EndlessSpace
                 proj.on_hit += target_unit => Activate(target_unit);
                 return proj;
             };
+
+            Awake();
         }
+
+        protected virtual void Awake() { }        
 
         public abstract void Activate(Unit target);
     }

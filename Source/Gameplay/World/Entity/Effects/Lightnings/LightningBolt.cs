@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 
 namespace EndlessSpace
 {
     class LightningBolt : ILightning
     {
+        const float NORMALIZE = 60f;
+
         public List<Line> Segments = new List<Line>();
         public Vector2 Start { get { return Segments[0].A; } }
         public Vector2 End { get { return Segments.Last().B; } }
@@ -41,9 +44,9 @@ namespace EndlessSpace
                 segment.Draw(sprite_batch, Tint * (Alpha * AlphaMultiplier));
         }
 
-        public virtual void Update()
+        public virtual void Update(GameTime game_time)
         {
-            Alpha -= FadeOutRate;
+            Alpha -= FadeOutRate * game_time.GetElapsedSeconds() * NORMALIZE;
         }
 
         protected static List<Line> CreateBolt(Vector2 source, Vector2 dest, float thickness)
@@ -104,7 +107,7 @@ namespace EndlessSpace
             return Vector2.Lerp(line.A, line.B, linePos);
         }
 
-        private static float Rand(float min, float max)
+        static float Rand(float min, float max)
         {
             return (float)rand.NextDouble() * (max - min) + min;
         }

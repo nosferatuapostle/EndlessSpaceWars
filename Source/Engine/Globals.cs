@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended.BitmapFonts;
 using System;
 
 namespace EndlessSpace
@@ -24,6 +25,16 @@ namespace EndlessSpace
         public static Texture2D Line2 { get; set; }
         public static Texture2D Line3 { get; set; }
         public static Texture2D Spark { get; set; }
+    }
+
+    struct Font
+    {
+        public static BitmapFont CourierNew16 { get; set; }
+        public static BitmapFont CourierNew16Bold { get; set; }
+        public static BitmapFont CourierNew18 { get; set; }
+        public static BitmapFont CourierNew18Bold { get; set; }
+        public static BitmapFont CourierNew24 { get; set; }
+        public static BitmapFont CourierNew24Bold { get; set; }
     }
 
     public static class ParticleData
@@ -64,7 +75,24 @@ namespace EndlessSpace
 
     public static class Globals
     {
-        public static Random Random = Random.Shared;
+        public static Random Random { get { return Random.Shared; } }
         public static ContentManager Content { get; set; }
+
+        public static Save Save { get; set; }
+        public static string AppData { get { return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData); } }
+
+        public static void Load()
+        {
+            Shader.Throb = Content.Load<Effect>("Shaders\\Throb");
+            Shader.GrayScale = Content.Load<Effect>("Shaders\\Grayscale");
+            Shader.Outline = Content.Load<Effect>("Shaders\\Outline");
+
+            Font.CourierNew16 = Content.Load<BitmapFont>("Fonts/CourierNew16");
+            Font.CourierNew16Bold = Content.Load<BitmapFont>("Fonts/CourierNew16Bold");
+            Font.CourierNew18 = Content.Load<BitmapFont>("Fonts/CourierNew18");
+            Font.CourierNew18Bold = Content.Load<BitmapFont>("Fonts/CourierNew18Bold");
+            Font.CourierNew24 = Content.Load<BitmapFont>("Fonts/CourierNew24");
+            Font.CourierNew24Bold = Content.Load<BitmapFont>("Fonts/CourierNew24Bold");
+        }
     }
 }

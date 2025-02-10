@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
+using MonoGame.Extended.ECS;
 using System;
 using System.Collections.Generic;
 
@@ -63,17 +64,19 @@ namespace EndlessSpace
 
         public void Update(GameTime game_time)
         {
-            foreach (var proj in pending_projectiles)
+            UnitsCount = Units.Count;
+
+            for (int i = 0; i < pending_projectiles.Count; i++)
             {
-                projectile_list.Add(proj);
-                collision_component.Insert(proj);
+                projectile_list.Add(pending_projectiles[i]);
+                collision_component.Insert(pending_projectiles[i]);
             }
             pending_projectiles.Clear();
 
-            foreach (var unit in pending_units)
+            for (int i = 0; i < pending_units.Count; i++)
             {
-                unit_list.Add(unit);
-                collision_component.Insert(unit);
+                unit_list.Add(pending_units[i]);
+                collision_component.Insert(pending_units[i]);
             }
             pending_units.Clear();
 
@@ -127,7 +130,7 @@ namespace EndlessSpace
         {
             foreach (Unit unit in unit_list)
             {
-                if (unit.IsHovered() || unit.is_selected)
+                if (unit.IsHoveredInWorld() || unit.is_selected)
                 {
                     if (unit.is_selected)
                     {
@@ -167,7 +170,7 @@ namespace EndlessSpace
                 {
                     if (!GameGlobals.SelectCondition(unit))
                     {
-                        if (unit.IsHovered() || unit.is_selected)
+                        if (unit.IsHoveredInWorld() || unit.is_selected)
                         {
                             float outline_thickness = 2.8f / unit.Size.X / unit.FrameCount;
                             Shader.Outline.Parameters["OutlineColor"].SetValue(shader_color.ToVector4());

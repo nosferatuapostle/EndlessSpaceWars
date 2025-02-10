@@ -37,7 +37,7 @@ namespace EndlessSpace
 
             for (int i = lightning_list.Count - 1; i >= 0; i--)
             {
-                lightning_list[i].Update();
+                lightning_list[i].Update(game_time);
 
                 if (lightning_list[i].IsComplete)
                 {

@@ -36,7 +36,7 @@ namespace EndlessSpace
 
         public void Update(GameTime game_time)
         {
-            if (loсk_camera) return;
+            if (loсk_camera || MainMenu.active || SettingsMenu.active) return;
             mouse_listener.Update(game_time);
 
             new_mouse_pos = Input.MousePosition;

@@ -2,7 +2,7 @@
 
 namespace EndlessSpace
 {
-    public class DuskFleetBlink(Unit owner) : Skill("Blink", Tag.Escape, owner, 10f)
+    public class DuskFleetBlink(Unit owner) : Skill("Blink", Tag.Escape, owner, 1f)
     {
         public Vector2 position;
 
